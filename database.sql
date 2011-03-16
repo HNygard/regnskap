@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS `registreringskontoer` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `navn` varchar(25) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;

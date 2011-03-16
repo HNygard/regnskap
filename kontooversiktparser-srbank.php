@@ -18,20 +18,20 @@ $hovedmappe = 'kontioversikt';
 
 // Finner filer
 $filer = array();
-$Q_hvem = mysql_query("select * from `hvem`");
+$Q_hvem = mysql_query("select * from `registreringskontoer`");
 echo '<ul>';
 while($R_hvem = mysql_fetch_assoc($Q_hvem))
 {
-	$mappe = $hovedmappe.'/'.$R_hvem['hvem_navn'].'/';
-	$filer[$R_hvem['hvem_id']] = array();
-	echo '<li><b>'.$R_hvem['hvem_navn'].'</b><ul>';
+	$mappe = $hovedmappe.'/'.$R_hvem['navn'].'/';
+	$filer[$R_hvem['id']] = array();
+	echo '<li><b>'.$R_hvem['navn'].'</b><ul>';
 	// Henter filer fra mappe:
 	if (file_exists($mappe) && $handle = opendir($mappe)) {
 		while (false !== ($file = readdir($handle))) {
 			if($file != '..' && $file != '.')
 			{
 				echo '<li>'.$mappe.$file.'</li>';
-				$filer[$R_hvem['hvem_id']][][0] = $mappe.$file;
+				$filer[$R_hvem['id']][][0] = $mappe.$file;
 			}
 		}
 	}
@@ -41,7 +41,7 @@ while($R_hvem = mysql_fetch_assoc($Q_hvem))
 	{
 		$Q_fil = mysql_query("");
 		if(!mysql_num_rows($Q_fil))
-			$filer[$R_hvem['hvem_id']][] = array('fil');
+			$filer[$R_hvem['id']][] = array('fil');
 	}*/
 }
 echo '</ul>';
@@ -72,7 +72,7 @@ foreach ($filer as $hvem => $filarray)
 						`beskrivelse` = '".$csv[1]."' AND
 						`rentedato` = '0' AND
 						`belop` = '".$csv[3]."' AND
-						`hvem_id` = '".$hvem."'"); // Sjekk for alle variablene
+						`registreringskonto_id` = '".$hvem."'"); // Sjekk for alle variablene
 				//echo mysql_error();exit;
 				if(mysql_num_rows($Q_kontioversikt))
 					$filer[$hvem][$i][2]++;
