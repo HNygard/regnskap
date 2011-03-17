@@ -68,20 +68,22 @@ foreach ($filer as $bankkonto_nr => $filarray)
 		
 		foreach($csv_array as $csv)
 		{
+			// Sjekker at det ikke er den første linjen
+			if($csv[1] == 'Beskrivelse')
+				continue;
+			
 			// Sjekker mot db
 			//TODO: Muligens noe behandling av dato og andre data
-			// TODO: ".$csv[0]." = dato
-			// TODO: ".$csv[2]." = rentedato
-			if(!empty($csv))
+			if(!empty($csv) && $csv[2] != '')
 			{
 				$Q_tidligeretransaksjoner = mysql_query("
 					SELECT *
 					FROM `banktransaksjoner`
 					WHERE
-						`betdato` = '0' AND
-						`beskrivelse` = '".$csv[1]."' AND
-						`rentedato` = '0' AND
-						`belop` = '".$csv[3]."' AND
+						`betdato`      = '".$csv[0]."' AND
+						`rentedato`    = '".$csv[2]."' AND
+						`beskrivelse`  = '".$csv[1]."' AND
+						`belop`        = '".$csv[3]."' AND
 						`bankkonto_nr` = '".$bankkonto_nr."'"); // Sjekk for alle variablene
 				//echo mysql_error();exit;
 				if(mysql_num_rows($Q_tidligeretransaksjoner))
@@ -91,12 +93,25 @@ foreach ($filer as $bankkonto_nr => $filarray)
 					// Legger inn i database
 					$filer[$bankkonto_nr][$i][1]++;
 				
-					// TODO: Legg i DB
-					/*
 					mysql_query("
-						INSERT INTO ``
-						");
-					*/
+						INSERT INTO `banktransaksjoner` 
+							(
+								`id` ,
+								`betdato` ,
+								`rentedato` ,
+								`beskrivelse` ,
+								`belop` ,
+								`bankkonto_nr`
+							)
+							VALUES (
+								NULL , 
+								'".$csv[0]."', 
+								'".$csv[2]."', 
+								'".$csv[1]."', 
+								'".$csv[3]."', 
+								'".$bankkonto_nr."'
+							);
+");
 				}
 			}
 		}

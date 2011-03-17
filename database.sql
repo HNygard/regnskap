@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS `bankkontoer` (
 
 CREATE TABLE IF NOT EXISTS `banktransaksjoner` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `betdato` int(11) NOT NULL,
-  `rentedato` int(11) NOT NULL,
+  `betdato` varchar(10) NOT NULL,
+  `rentedato` varchar(10) NOT NULL,
   `beskrivelse` varchar(255) NOT NULL,
   `belop` double NOT NULL,
   `bankkonto_nr` varchar(255) NOT NULL,
