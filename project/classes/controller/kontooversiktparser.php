@@ -1,8 +1,11 @@
 <?php
 
-require "conf/conf.php";
 
-//require "class/csv-function.php";
+class Controller_Kontooversiktparser extends Controller
+
+{
+	function action_srbank ()
+{
 
 function csv_to_array($array)
 {
@@ -14,19 +17,19 @@ function csv_to_array($array)
 	return $csv_array;
 }
 
-$hovedmappe = 'import/sr-bank';
+$hovedmappe = '../import/sr-bank';
 
 // Finner filer
 $filer = array();
-$Q = mysql_query("select * from `bankkontoer`");
+$Q = DB::query(Database::SELECT, "select * from `bankkontoer`")->execute();
 
 echo '<b>Bankkontoer</b>:<br />';
 echo '<ul>';
-if(!mysql_num_rows($Q))
+if(!$Q->count())
 {
 	echo '<span style="color: red;">Ingen bankkontoer opprettet!</span>';
 }
-while($R = mysql_fetch_assoc($Q))
+foreach($Q->as_array() as $R)
 {
 	$mappe = $hovedmappe.'/'.$R['nr'].'/';
 	$filer[$R['nr']] = array();
@@ -76,24 +79,25 @@ foreach ($filer as $bankkonto_nr => $filarray)
 			//TODO: Muligens noe behandling av dato og andre data
 			if(!empty($csv) && $csv[2] != '')
 			{
-				$Q_tidligeretransaksjoner = mysql_query("
+				$Q_tidligeretransaksjoner = DB::query(Database::SELECT, "
 					SELECT *
 					FROM `banktransaksjoner`
 					WHERE
-						`betdato`      = '".$csv[0]."' AND
-						`rentedato`    = '".$csv[2]."' AND
-						`beskrivelse`  = '".$csv[1]."' AND
-						`belop`        = '".$csv[3]."' AND
-						`bankkonto_nr` = '".$bankkonto_nr."'"); // Sjekk for alle variablene
+						`betdato`      = '".utf8::clean($csv[0])."' AND
+						`rentedato`    = '".utf8::clean($csv[2])."' AND
+						`beskrivelse`  = '".utf8::clean($csv[1])."' AND
+						`belop`        = '".utf8::clean($csv[3])."' AND
+						`bankkonto_nr` = '".$bankkonto_nr."'")
+					->execute(); // Sjekk for alle variablene
 				//echo mysql_error();exit;
-				if(mysql_num_rows($Q_tidligeretransaksjoner))
+				if($Q_tidligeretransaksjoner->count())
 					$filer[$bankkonto_nr][$i][2]++;
 				else
 				{
 					// Legger inn i database
 					$filer[$bankkonto_nr][$i][1]++;
 				
-					mysql_query("
+					DB::query(Database::INSERT, "
 						INSERT INTO `banktransaksjoner` 
 							(
 								`id` ,
@@ -111,7 +115,7 @@ foreach ($filer as $bankkonto_nr => $filarray)
 								'".$csv[3]."', 
 								'".$bankkonto_nr."'
 							);
-");
+						")->execute();
 				}
 			}
 		}
@@ -139,3 +143,6 @@ foreach ($filer as $bankkonto_nr => $filarray)
 	}
 }
 echo '</table>'.chr(10);
+
+}
+}
