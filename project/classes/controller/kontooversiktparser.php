@@ -109,10 +109,10 @@ foreach ($filer as $bankkonto_nr => $filarray)
 							)
 							VALUES (
 								NULL , 
-								'".$csv[0]."', 
-								'".$csv[2]."', 
-								'".$csv[1]."', 
-								'".$csv[3]."', 
+								'".utf8::clean($csv[0])."', 
+								'".utf8::clean($csv[2])."', 
+								'".utf8::clean($csv[1])."', 
+								'".utf8::clean($csv[3])."', 
 								'".$bankkonto_nr."'
 							);
 						")->execute();
