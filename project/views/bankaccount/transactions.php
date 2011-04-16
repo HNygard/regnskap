@@ -17,7 +17,7 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 		'	<tr>'.chr(10).
 		'		<td>'.$bankaccount_transaction->id.'</td>'.chr(10).
 		'		<td>'.date('d.m.Y', $bankaccount_transaction->payment_date).'</td>'.chr(10).
-		'		<td>'.$bankaccount_transaction->amount.'</td>'.chr(10).
+		'		<td style="text-align: right;">'.html::money($bankaccount_transaction->amount).'</td>'.chr(10).
 		'		<td>'.$bankaccount_transaction->description.'</td>'.chr(10).
 		'		<td>'.date('d.m.Y', $bankaccount_transaction->intrest_date).'</td>'.chr(10).
 		'	</tr>'.chr(10);

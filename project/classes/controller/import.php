@@ -22,7 +22,7 @@ class Controller_Import extends Controller
 		echo '<ul>';
 		if(!$bankaccounts->count())
 		{
-			echo '<div class="error">'.__('No bank accounts created').'</div>';
+			echo html::msg_error(__('No bank accounts created'));
 		}
 	
 		/*
