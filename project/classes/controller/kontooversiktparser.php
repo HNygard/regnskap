@@ -1,12 +1,5 @@
 <?php
 
-
-class Controller_Kontooversiktparser extends Controller
-
-{
-	function action_srbank ()
-{
-
 function csv_to_array($array)
 {
 	$csv_array = array();
@@ -16,6 +9,14 @@ function csv_to_array($array)
 	}
 	return $csv_array;
 }
+
+class Controller_Kontooversiktparser extends Controller
+
+{
+	function action_srbank ()
+{
+
+
 
 $hovedmappe = '../import/sr-bank';
 
