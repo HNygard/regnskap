@@ -6,9 +6,25 @@
 
 <body>
 
-<?php echo '<h1>'.$title.'</h1>'; ?>
+<?php
 
-<?php echo $content; ?>
+// Menu
+echo '<span style="font-size:0.8em;">'.chr(10).
+
+html::anchor('index.php/import/srbank', __('Import')).' -:- '.chr(10).
+html::anchor('index.php/bankaccount', __('Bank accounts')).' -:- '.chr(10).
+
+'</span>'.chr(10).chr(10);
+
+// Title
+echo '<h1>'.$title.'</h1>'; 
+
+
+// Content
+echo $content;
+
+
+?>
 
 <div class="footer">
 <br />Laget av Hallvard Nygård (<a href="https://twitter.com/hallny/">@hallny</a>). CC-BY-SA, <a href="https://github.com/HNygard/regnskap">kildekode på Github</a>.
