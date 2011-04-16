@@ -54,6 +54,13 @@ class Model_Bankaccount_Importfile extends Sprig {
 					$not_imported++;
 					continue;
 				}
+				
+				if(strlen($csv[0]) > 10) // 01.08.2008-00:00:00
+					$csv[0] = substr($csv[0], 0, 10); // 01.08.2008
+				
+				if(strlen($csv[2]) > 10) // 01.08.2008-00:00:00
+					$csv[2] = substr($csv[2], 0, 10); // 01.08.2008
+				
 				$transaction = Sprig::factory('bankaccount_transaction',
 						array(
 							'bankaccount_id' => $this->bankaccount_id,
