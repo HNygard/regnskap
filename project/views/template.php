@@ -2,6 +2,7 @@
 <head>
 	<title><?php echo $title; ?> - Regnskap</title>
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+	<link href="<?php echo URL::site('index.php/css/regnskap', null, false); ?>" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
