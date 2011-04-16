@@ -50,4 +50,29 @@ abstract class Sprig extends Sprig_Core {
 		
 		return $this;
 	}
+	
+	// TODO: make a comment here for this method:
+	public function valuesFromHtmlForm($data)
+	{
+		$values = array();
+		foreach($this->fields() as $field_name => $field)
+		{
+			if(!$field->editable)
+				continue;
+			
+			if(isset($data[$field_name]))
+			{
+				// Getting data from post
+				$values[$field_name] = $data[$field_name];
+			}
+			else
+			{
+				// Default value
+				$values[$field_name] = $field->default;
+			}
+		}
+		$this->values($values);
+		
+		return $this;
+	}
 }
