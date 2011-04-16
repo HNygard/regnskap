@@ -60,10 +60,12 @@ class Controller_Account extends Controller_Template
 		
 		// TODO: self checking method on Sprig-models
 		
-		if($confirm != 'true')
+		if($confirm == 'true')
 		{
 			$object->delete();
 			$this->request->redirect($this->request->controller());
 		}
+		
+		$this->template2->title = __('Delete').' '.__($this->request->controller());
 	}
 }

@@ -17,6 +17,11 @@ foreach($accounts as $account)
 				'index.php/account/edit/'.$account->id,
 				__('Edit')
 			).
+			', '.
+			html::anchor(
+				'index.php/account/delete/'.$account->id,
+				__('Delete')
+			).
 		'</li>';
 }
 echo '</ul>';
