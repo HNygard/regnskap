@@ -13,11 +13,60 @@ function csv_to_array($array)
 class Controller_Kontooversiktparser extends Controller
 
 {
+	protected $srbank_main_folder = '../import/sr-bank';
 	function action_srbank ()
 {
+	$Q = DB::query(Database::SELECT, "select * from `bankkontoer`")->execute();
 
+	echo '<b>'.__('Bank accounts').'</b>:<br />';
+	echo '<ul>';
+	if(!$Q->count())
+	{
+		echo '<div class="error">'.__('No bank accounts created').'</div>';
+	}
+	
+	/*
+	$files_found = array(
+			accountnum => array(
+				'filepath',
+				'filepath',
+			)
+		);
+	*/
+	$files_found = array();
+	foreach($Q->as_array() as $R)
+	{
+		$folder = $this->srbank_main_folder.'/'.$R['nr'].'/';
+		$files_found[$R['nr']] = array();
+		echo '<li><b>'.$R['nr'].'</b><ul>';
+		
+		// Getting files from the folder:
+		if (file_exists($folder) && $handle = opendir($folder))
+		{
+			while (false !== ($file = readdir($handle)))
+			{
+				if($file != '..' && $file != '.')
+				{
+					echo '<li>'.$folder.$file.'</li>';
+					$filer[$R['nr']][][0] = $folder.$file;
+				}
+			}
+		}
+		else
+		{
+			// Folder not found
+			echo '<span style="color: red;">'.__('No folder for bank account :bankaccount_num (:folder) exists',
+				array(':bankaccount_num' =>  $R['nr'], ':folder' => $folder)).'.</span>';
+		}
+		echo '</ul></li>';
+	}
+	echo '</ul>';
+	
+	
+}
 
-
+	function action_srbank_old ()
+{
 $hovedmappe = '../import/sr-bank';
 
 // Finner filer
@@ -59,6 +108,19 @@ foreach($Q->as_array() as $R)
 	}*/
 }
 echo '</ul>';
+
+/*
+
+$transaksjoner = array(
+		$bt->serializeTransaksjon() => Banktransaksjon $bt,
+		$bt2->serializeTransaksjon() => Banktransaksjon $bt2,
+		etc
+	);
+
+$filer = array(
+		
+	);
+ */
 
 foreach ($filer as $bankkonto_nr => $filarray)
 {
