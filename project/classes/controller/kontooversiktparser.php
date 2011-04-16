@@ -16,11 +16,12 @@ class Controller_Kontooversiktparser extends Controller
 	protected $srbank_main_folder = '../import/sr-bank';
 	function action_srbank ()
 {
-	$Q = DB::query(Database::SELECT, "select * from `bankkontoer`")->execute();
-
-	echo '<b>'.__('Bank accounts').'</b>:<br />';
+	//$Q = DB::query(Database::SELECT, "select * from `bankkontoer`")->execute();
+	$bankaccounts = Sprig::factory('bankaccount', array())->load(NULL, FALSE);
+	
+	echo '<b>'.html::anchor('index.php/bankaccount', __('Bank accounts')).'</b>:<br />';
 	echo '<ul>';
-	if(!$Q->count())
+	if(!$bankaccounts->count())
 	{
 		echo '<div class="error">'.__('No bank accounts created').'</div>';
 	}
@@ -34,11 +35,11 @@ class Controller_Kontooversiktparser extends Controller
 		);
 	*/
 	$files_found = array();
-	foreach($Q->as_array() as $R)
+	foreach($bankaccounts as $bankaccount)
 	{
-		$folder = $this->srbank_main_folder.'/'.$R['nr'].'/';
-		$files_found[$R['nr']] = array();
-		echo '<li><b>'.$R['nr'].'</b><ul>';
+		$folder = $this->srbank_main_folder.'/'.$bankaccount->num.'/';
+		$files_found[$bankaccount->id] = array();
+		echo '<li><b>'.$bankaccount->num.'</b><ul>';
 		
 		// Getting files from the folder:
 		if (file_exists($folder) && $handle = opendir($folder))
@@ -48,7 +49,7 @@ class Controller_Kontooversiktparser extends Controller
 				if($file != '..' && $file != '.')
 				{
 					echo '<li>'.$folder.$file.'</li>';
-					$filer[$R['nr']][][0] = $folder.$file;
+					$files_found[$bankaccount->id][] = $folder.$file;
 				}
 			}
 		}
@@ -56,13 +57,39 @@ class Controller_Kontooversiktparser extends Controller
 		{
 			// Folder not found
 			echo '<span style="color: red;">'.__('No folder for bank account :bankaccount_num (:folder) exists',
-				array(':bankaccount_num' =>  $R['nr'], ':folder' => $folder)).'.</span>';
+				array(':bankaccount_num' => $bankaccount->num, ':folder' => $folder)).'.</span>';
 		}
 		echo '</ul></li>';
 	}
 	echo '</ul>';
 	
-	
+	echo '<ul>';
+	foreach($files_found as $bankaccount_id => $files)
+	{
+		foreach($files as $file)
+		{
+			echo '<li><b>'.$file.'</b> ';
+			$importfile = Sprig::factory('bankaccount_importfile', 
+				array(
+					'filepath' => $file,
+					'bankaccount_id' => $bankaccount_id,
+				));
+			$importfile->load();
+			if($importfile->loaded())
+			{
+				echo __('Already imported');
+			}
+			else
+			{
+				echo __('Not jet imported');
+			}
+			echo '<ul><li>';
+				$importfile->importFromFile();
+			echo '</li></ul>';
+			echo '</li>';
+		}
+	}
+	echo '</ul>';
 }
 
 	function action_srbank_old ()
