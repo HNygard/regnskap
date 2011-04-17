@@ -6,7 +6,7 @@ echo '<ul>';
 foreach($transactions as $transaction)
 {
 	echo '	<li>'.
-			'('.date('d.m.Y', $transaction->time).') <b>'.$$transaction->amount.':</b> '.
+			'('.date('d.m.Y', $transaction->time).') <b>'.$transaction->amount.':</b> '.
 			
 			html::anchor(
 				'index.php/transaction/transactions/'.$transaction->id,
