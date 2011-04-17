@@ -16,6 +16,7 @@ html::anchor('index.php/account', __('Accounts')).' -:- '.chr(10).
 html::anchor('index.php/transaction', __('Transactions')).' -:- '.chr(10).
 html::anchor('index.php/import/srbank', __('Import')).' -:- '.chr(10).
 html::anchor('index.php/bankaccount', __('Bank accounts')).' -:- '.chr(10).
+html::anchor('index.php/bankaccount_autoimport', __('Autoimports')).' -:- '.chr(10).
 
 '</span>'.chr(10).chr(10);
 

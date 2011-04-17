@@ -31,6 +31,11 @@ class Model_Bankaccount_Transaction extends Sprig {
 				'in_db'  => false,
 				'empty'  => true,
 			)),
+			
+			'autoimport_account_id' => new Sprig_Field_Integer(array(
+				'in_db'  => false,
+				'empty'  => true,
+			)),
 		);
 	}
 	
@@ -117,6 +122,29 @@ class Model_Bankaccount_Transaction extends Sprig {
 					$this->srbank_text = $parts[4];
 					break;
 			}
+		}
+	}
+	
+	public function canAutoimport()
+	{
+		if(!isset($this->srbank_text))
+			return false;
+		if(!isset($this->srbank_type))
+			return false;
+		
+		$autoimport = Sprig::factory('bankaccount_autoimport', 
+			array(
+				'text' => $this->srbank_text,
+				'type' => $this->srbank_type,
+			))->load();
+		if(!$autoimport->loaded())
+		{
+			return false;
+		}
+		else
+		{
+			$this->autoimport_account_id = $autoimport->account_id;
+			return true;
 		}
 	}
 }

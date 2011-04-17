@@ -27,6 +27,19 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 		'		<td style="border: solid gray 1px;">'.$bankaccount_transaction->srbank_type.'</td>'.chr(10).
 		'		<td style="border: solid gray 1px;">'.$bankaccount_transaction->srbank_date.'</td>'.chr(10).
 		'		<td style="border: solid gray 1px;">'.$bankaccount_transaction->srbank_text.'</td>'.chr(10).
+		'		<td>';
+	if($bankaccount_transaction->canAutoimport())
+	{
+		echo '<img src="'.URL::base().'/images/tick.png">';
+		$account = Sprig::factory('account', 
+			array('id' => $bankaccount_transaction->autoimport_account_id))->loadOrThrowException();
+		echo ' - '.$account->name;
+	}
+	else
+	{
+		echo '<img src="'.URL::base().'/images/note_new.gif">';
+	}
+	echo	'</td>'.chr(10).
 		'	</tr>'.chr(10);
 }
 echo '</table>'.chr(10);

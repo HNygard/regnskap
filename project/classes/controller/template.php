@@ -9,7 +9,7 @@ class Controller_Template extends Kohana_Controller_Template {
 		if(!isset($this->template) || $this->template == 'template')
 		{
 			// No template is set, using default
-			$this->template = $this->request->controller().'/'.$this->request->action();
+			$this->template = str_replace('_', '/', $this->request->controller()).'/'.$this->request->action();
 		}
 		
 		$thereturn = parent::before();
