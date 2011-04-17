@@ -43,7 +43,12 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 		'		<td>'.$bankaccount_transaction->description.'</td>'.chr(10).
 		'		<td>'.date('d.m.Y', $bankaccount_transaction->intrest_date).'</td>'.chr(10).
 		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->srbank_type.'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;">'.$bankaccount_transaction->srbank_date.'</td>'.chr(10).
+		'		<td style="border: solid gray 1px;">';
+	if(!is_null($bankaccount_transaction->srbank_date))
+		echo date('d.m.Y', $bankaccount_transaction->srbank_date);
+	else
+		echo '&nbsp;';
+	echo '</td>'.chr(10).
 		'		<td style="border: solid gray 1px;" class="text">'.$bankaccount_transaction->srbank_text.'</td>'.chr(10).
 		'		<td class="button">';
 	if($bankaccount_transaction->canAutoimport())

@@ -23,7 +23,7 @@ class Model_Bankaccount_Transaction extends Sprig {
 				'in_db'  => false,
 				'empty'  => true,
 			)),
-			'srbank_date' => new Sprig_Field_Char(array(
+			'srbank_date' => new Sprig_Field_Timestamp(array(
 				'in_db'  => false,
 				'empty'  => true,
 			)),
@@ -44,6 +44,11 @@ class Model_Bankaccount_Transaction extends Sprig {
 		return 'transaction_'.date('Y-m-d', $this->payment_date).': '.$this->amount;
 	}
 	
+	/**
+	 * Analyse a transaction from SR-bank
+	 *
+	 * Sets srbank_type, srbank_date and srbank_text
+	 */
 	public function analyse_srbank()
 	{
 		// Analyse according to the following types for transactions:
@@ -89,7 +94,10 @@ class Model_Bankaccount_Transaction extends Sprig {
 				case 'MINIBANK-UTTAK I FREMMED BANK':
 					// Format:
 					// TYPE: 15.10 TEXT
-					$this->srbank_date = substr($this->srbank_text, 0, 5);
+					
+					
+					
+					$this->srbank_date = $this->getDateWithYear(substr($this->srbank_text, 0, 5));
 					$this->srbank_text = trim(substr($this->srbank_text, 5));
 					break;
 				case 'SKATT':
@@ -102,7 +110,12 @@ class Model_Bankaccount_Transaction extends Sprig {
 					$betalt_pos = strpos($this->srbank_text, 'Betalt: ');
 					if($betalt_pos !== false) // Found "Betalt: "
 					{
-						$this->srbank_date = substr($this->srbank_text, $betalt_pos+strlen('Betalt: '));
+						$date_tmp = substr($this->srbank_text, $betalt_pos+strlen('Betalt: '));
+						if(substr($date_tmp, 6) >= 90) // year 1990-1999
+							$date_tmp = substr($date_tmp, 0, 6).'19'.substr($date_tmp, 6);
+						else // year 2000-2099
+							$date_tmp = substr($date_tmp, 0, 6).'20'.substr($date_tmp, 6);
+						$this->srbank_date = $date_tmp;
 						$this->srbank_text = trim(substr($this->srbank_text, 0, $betalt_pos));
 					}
 					break;
@@ -118,7 +131,7 @@ class Model_Bankaccount_Transaction extends Sprig {
 						break;
 					}
 					
-					$this->srbank_date = $parts[1];
+					$this->srbank_date = $this->getDateWithYear($parts[1]);
 					$this->srbank_text = $parts[4];
 					break;
 			}
@@ -131,6 +144,37 @@ class Model_Bankaccount_Transaction extends Sprig {
 		}
 	}
 	
+	/**
+	 * Get the date including the year
+	 * 
+	 * If the transaction is done on a friday, saturday or sunday the date
+	 * on the recite will differ from payment_date.
+	 *
+	 * @param  String  Date with format "dd.mm"
+	 * @return String  Date with format "dd.mm.YYYY"
+	 */
+	public function getDateWithYear ($tmp)
+	{
+		// Adding year
+		if(
+			($tmp == '31.12' || $tmp == '30.12' || $tmp == '29.12') &&
+			date('m', $this->payment_date) == '01'
+		)
+		{
+			$tmp = $tmp.'.'.(date('Y', $this->payment_date)-1);
+		}
+		else
+		{
+			$tmp = $tmp.'.'.date('Y', $this->payment_date);
+		}
+		return $tmp;
+	}
+	
+	/**
+	 * Can this bank transaction be automatically imported?
+	 * 
+	 * @return  boolean
+	 */
 	public function canAutoimport()
 	{
 		if(!isset($this->srbank_text))
