@@ -7,8 +7,6 @@ foreach($object->fields() as $field_name => $field)
 {
 	if(!$field->editable)
 		continue;
-	if($field instanceof Sprig_Field_Auto)
-		continue;
 	
 	echo '<b>'.$field->label.'</b><br />'.chr(10);
 	echo $object->input($field_name).'<br /><br />'.chr(10).chr(10);
