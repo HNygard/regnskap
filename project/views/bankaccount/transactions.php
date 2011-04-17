@@ -4,15 +4,15 @@ echo '<div id="dialog-form" title="'.__('Create autoimport').'">
 	<span id="last_transaction_id" style="display: none;"></span>
 	<form>
 	<fieldset>
-		<label for="autoimport_account_id">'.__('Account').'</label>
+		<label for="autoimport_account_id">'.__('Account').'</label><br />
 		<select name="autoimport_account_id" id="autoimport_account_id" class="text ui-widget-content ui-corner-all">';
 foreach($accounts as $account)
 	echo '			<option value="'.$account->id.'">'.$account->name.'</option>'.chr(10);
 
 echo '		</select><br />
-		<label for="autoimport_type">'.__('Type').'</label>
-		<input type="text" name="autoimport_type" id="autoimport_type" value="" class="text ui-widget-content ui-corner-all" />
-		<label for="autoimport_text">'.__('Text').'</label>
+		<label for="autoimport_type">'.__('Type').'</label><br />
+		<input type="text" name="autoimport_type" id="autoimport_type" value="" class="text ui-widget-content ui-corner-all" /><br />
+		<label for="autoimport_text">'.__('Text').'</label><br />
 		<input type="text" name="autoimport_text" id="autoimport_text" value="" class="text ui-widget-content ui-corner-all" />
 	</fieldset>
 	</form>
