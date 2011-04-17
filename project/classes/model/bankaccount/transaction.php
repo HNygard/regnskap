@@ -122,6 +122,12 @@ class Model_Bankaccount_Transaction extends Sprig {
 					$this->srbank_text = $parts[4];
 					break;
 			}
+			
+			// Remove a few characters that we use in URIs
+			$this->srbank_type = str_replace('/', ' ', $this->srbank_type);
+			$this->srbank_text = str_replace('/', ' ', $this->srbank_text);
+			$this->srbank_type = str_replace('.', '',  $this->srbank_type);
+			$this->srbank_text = str_replace('.', '',  $this->srbank_text);
 		}
 	}
 	

@@ -17,6 +17,9 @@ foreach($bankaccount_autoimports as $bankaccount_autoimport)
 				'index.php/bankaccount_autoimport/delete/'.$bankaccount_autoimport->id,
 				__('Delete')
 			).
+			' - '.
+			$bankaccount_autoimport->type.' - '.
+			$bankaccount_autoimport->text.
 		'</li>';
 }
 echo '</ul>';
