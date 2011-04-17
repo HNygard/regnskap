@@ -14,6 +14,11 @@ foreach($bankaccounts as $bankaccount)
 				'index.php/bankaccount/transactions/'.$bankaccount->id,
 				__('Transactions')
 			).
+			', '.
+			html::anchor(
+				'index.php/bankaccount/autoimport/'.$bankaccount->id,
+				__('Automaticlly import transactions')
+			).
 		'</li>';
 }
 echo '</ul>';

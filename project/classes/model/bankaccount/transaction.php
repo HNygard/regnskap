@@ -17,6 +17,14 @@ class Model_Bankaccount_Transaction extends Sprig {
 			)),
 			'amount' => new Sprig_Field_Float(array(
 			)),
+			'imported' => new Sprig_Field_Boolean(array(
+				'editable'        => false,
+				'default'         => false,
+			)),
+			'imported_automatically' => new Sprig_Field_Boolean(array(
+				'editable'        => false,
+				'default'         => false,
+			)),
 			
 			
 			'srbank_type' => new Sprig_Field_Char(array(
@@ -196,5 +204,56 @@ class Model_Bankaccount_Transaction extends Sprig {
 			$this->autoimport_account_id = $autoimport->account_id;
 			return true;
 		}
+	}
+	
+	/**
+	 * Automatically import this bank transaction
+	 */
+	public function autoimport ()
+	{
+		// Need to be loaded
+		$this->loadedOrThrowException();
+		
+		// Already imported?
+		if($this->imported)
+			return false;
+		
+		// Checking that there is not a transaction out there
+		$transaction_check = Sprig::factory('transaction', array(
+				'bankaccount_transaction_id' => $this->id,
+			))->load();
+		if($transaction_check->loaded())
+			return false;
+		
+		// Analyse this SR-bank transaction
+		$this->analyse_srbank();
+		
+		// Can it be automatically imported?
+		if(!$this->canAutoimport())
+		{
+			return false;
+		}
+		
+		// Creating
+		if(!is_null($this->srbank_date))
+			$time = $this->srbank_date;
+		else
+			$time = $this->payment_date;
+		
+		$transactions = Sprig::factory('transaction',
+			array(
+				'account_id'                  => $this->autoimport_account_id,
+				'description'                 => $this->description,
+				'amount'                      => $this->amount,
+				'time'                        => $time,
+				'bankaccount_transaction_id'  => $this->id,
+				'imported_automatically'      => true,
+			))->create();
+		
+		$this->imported = true;
+		$this->imported_automatically = true;
+		$this->update();
+		
+		return true;
 	}
 }

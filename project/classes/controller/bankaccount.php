@@ -28,4 +28,27 @@ class Controller_Bankaccount extends Controller_Template
 		$query = DB::select()->order_by('from');
 		$this->template->bankaccount_importfiles = Sprig::factory('bankaccount_importfile', array())->load($query, FALSE);
 	}
+	
+	public function action_autoimport ($bankaccount_id)
+	{
+		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
+		$this->template2->title = __('Autoimport transactions on bank account').' '.$bankaccount->num;
+		$query = DB::select()
+			->order_by('payment_date', 'DESC')
+			->where('imported', '=', false);
+		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
+		
+		echo '<h1>'.$bankaccount->num.'</h1>';
+		foreach($this->template->bankaccount_transactions as $bankaccount_transaction)
+		{
+			echo $bankaccount_transaction->id.' - ';
+			if($bankaccount_transaction->autoimport())
+				echo 'ok';
+			else
+				echo 'failed';
+			echo '<br>';
+		}
+		exit;
+	}
+	
 }
