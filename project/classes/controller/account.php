@@ -14,6 +14,7 @@ class Controller_Account extends Controller_Template_Crud
 		$account = Sprig::factory('account', array('id' => $account_id))->loadOrThrowException();
 		$this->template2->title = __('Transactions on account').' '.$account->name;
 		$query = DB::select()->order_by('time');
+		$query->where('account_id', '=', $account->id);
 		$this->template->transactions = Sprig::factory('transaction', array())->load($query, FALSE);
 	}
 }
