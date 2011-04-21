@@ -37,7 +37,7 @@ $(document).ready(function() {
 						$('#'+last_transaction_id.text()+' td.button').
 							html('<img src="/regnskap/regnskap/webroot//images/tick.png" '+
 								'class="canAutoimport"> - '+
-								autoimport_account_id.text()
+								$('#autoimport_account_id :selected').text()
 							);
 					} else {
 						alert('Something went wrong! Not created!');
