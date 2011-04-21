@@ -27,12 +27,12 @@ foreach($transactions_query as $transaction)
 function getNextMonth($month)
 {
 	$year = substr($month, 0, 4);
-	$month = (((int)substr($month, 4))+1);
+	$month = (((int)substr($month, 4))-1);
 	
-	if($month == 13)
+	if($month == 0)
 	{
-		$year++;
-		$month = 01;
+		$year--;
+		$month = 12;
 	}
 	if(strlen($month) == 1)
 		$month = '0'.$month;
@@ -44,7 +44,7 @@ function getNextMonth($month)
 echo '<table>'.chr(10);
 echo '	<tr>'.chr(10);
 echo '		<th>&nbsp;</th>'.chr(10);
-for($month = $month_first; $month <= $month_last; $month = getNextMonth($month))
+for($month = $month_last; $month >= $month_first; $month = getNextMonth($month))
 {
 	echo '		<th>'.HTML::anchor('index.php/transaction/showbydate/'.
 					substr($month,0,4).'/'.substr($month,4,2)
@@ -65,7 +65,7 @@ foreach($query as $account)
 {
 	echo '	<tr>'.chr(10);
 	echo '		<th>'.str_replace(' ', '&nbsp;', $account['name']).'</th>'.chr(10);
-	for($month = $month_first; $month <= $month_last; $month = getNextMonth($month))
+	for($month = $month_last; $month >= $month_first; $month = getNextMonth($month))
 	{
 		if(isset($by_month[$account['id']][$month]))
 			$this_month = $by_month[$account['id']][$month];
