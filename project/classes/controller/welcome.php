@@ -1,13 +1,15 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class Controller_Welcome extends Controller {
-
+class Controller_Welcome extends Controller_Template
+{
 	public function action_index()
 	{
-		$this->response->body('hello, world!'.
-		
-		'<br><br>'.
-		html::anchor('index.php/Kontooversiktparser/srbank','Til parser'));
+		$this->action_show();
 	}
-
-} // End Welcome
+	
+	public function action_show()
+	{	
+		$this->template2->title = __('Overview');
+		$this->template->transactions_query = DB::select()->from('transactions')->execute();
+	}
+}
