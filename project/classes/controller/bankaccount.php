@@ -14,6 +14,7 @@ class Controller_Bankaccount extends Controller_Template
 		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
 		$this->template2->title = __('Transactions on bank account').' '.$bankaccount->num;
 		$query = DB::select()->order_by('payment_date', 'DESC');
+		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
 		$query = DB::select()->order_by('num');
@@ -28,6 +29,7 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template2->title = __('Not imported transactions on bank account').' '.$bankaccount->num;
 		$query = DB::select()->order_by('payment_date', 'DESC');
 		$query->where('imported', '=', false);
+		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
 		$query = DB::select()->order_by('num');
@@ -52,6 +54,7 @@ class Controller_Bankaccount extends Controller_Template
 		$query = DB::select()
 			->order_by('payment_date', 'DESC')
 			->where('imported', '=', false);
+		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
 		echo '<h1>'.$bankaccount->num.'</h1>';
