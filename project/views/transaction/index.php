@@ -2,17 +2,14 @@
 
 echo html::anchor('index.php/transaction/create', __('Create new transaction'));
 
-echo '<ul>';
+echo '<table class="prettytable">';
 foreach($transactions as $transaction)
 {
-	echo '	<li>'.
-			'('.date('d.m.Y', $transaction->time).') <b>'.$transaction->amount.':</b> '.
-			
-			html::anchor(
-				'index.php/transaction/transactions/'.$transaction->id,
-				__('Transactions')
-			).
-			', '.
+	echo '	<tr>'.
+			'<td>'.date('d.m.Y', $transaction->time).')</td>'.
+			'<td style="text-align: right"><b>'.HTML::money($transaction->amount).'</b></td>'.
+			'<td>'.$transaction->description.'</td>'.
+			'<td>'.
 			html::anchor(
 				'index.php/transaction/edit/'.$transaction->id,
 				__('Edit')
@@ -22,6 +19,7 @@ foreach($transactions as $transaction)
 				'index.php/transaction/delete/'.$transaction->id,
 				__('Delete')
 			).
-		'</li>';
+			'</td>'.
+		'</tr>'.chr(10);
 }
-echo '</ul>';
+echo '</table>';
