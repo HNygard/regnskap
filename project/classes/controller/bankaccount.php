@@ -9,11 +9,26 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->bankaccounts = Sprig::factory('bankaccount', array())->load($query, FALSE);
 	}
 	
-	public function action_transactions ($bankaccount_id)
+	public function action_transactions ($bankaccount_id, $order_by = 'payment_date', $order_desc = 'desc')
 	{
+		if(
+			$order_by != 'payment_date' && 
+			$order_by != 'amount' && 
+			$order_by != 'id' &&
+			$order_by != 'description')
+		{
+			$order_by = 'payment_date';
+		}
+		if($order_desc != 'desc' && $order_desc != 'asc')
+		{
+			$order_desc = 'desc';
+		}
+		$this->template->order_by    = $order_by;
+		$this->template->order_desc  = $order_desc;
+		
 		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
 		$this->template2->title = __('Transactions on bank account').' '.$bankaccount->num;
-		$query = DB::select()->order_by('payment_date', 'DESC');
+		$query = DB::select()->order_by($order_by, $order_desc);
 		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
@@ -23,11 +38,26 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->bankaccount = $bankaccount;
 	}
 	
-	public function action_transactionsnotimported ($bankaccount_id)
+	public function action_transactionsnotimported ($bankaccount_id, $order_by = 'payment_date', $order_desc = 'desc')
 	{
+		if(
+			$order_by != 'payment_date' && 
+			$order_by != 'amount' && 
+			$order_by != 'id' &&
+			$order_by != 'description')
+		{
+			$order_by = 'payment_date';
+		}
+		if($order_desc != 'desc' && $order_desc != 'asc')
+		{
+			$order_desc = 'desc';
+		}
+		$this->template->order_by    = $order_by;
+		$this->template->order_desc  = $order_desc;
+		
 		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
 		$this->template2->title = __('Not imported transactions on bank account').' '.$bankaccount->num;
-		$query = DB::select()->order_by('payment_date', 'DESC');
+		$query = DB::select()->order_by($order_by, $order_desc);
 		$query->where('imported', '=', false);
 		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);

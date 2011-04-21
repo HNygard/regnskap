@@ -29,13 +29,33 @@ echo '		</select><br />
 	</form>
 </div>'.chr(10).chr(10);
 
+if($order_desc == 'desc')
+{
+	$order_desc2 = 'asc';
+}
+else
+{
+	$order_desc2 = 'desc';
+}
+function order_by_link($should_be, $link, $order_by, $order_desc, $order_desc2)
+{
+	if($order_by == $should_be)
+		return $link.$should_be.'/'.$order_desc2;
+	else
+		return $link.$should_be.'/'.$order_desc;
+}
+$link = 'index.php/'.
+	Request::current()->controller().'/'.
+	Request::current()->action().'/'.
+	$bankaccount->id.'/';
+
 echo '<table>'.chr(10);
 echo
 	'	<tr>'.chr(10).
-	'		<th>'.__('Id').'</th>'.chr(10).
-	'		<th>'.__('Payed date').'</th>'.chr(10).
-	'		<th>'.__('Amount').'</th>'.chr(10).
-	'		<th>'.__('Description').'</th>'.chr(10).
+	'		<th>'.HTML::anchor(order_by_link('id', $link, $order_by, $order_desc, $order_desc2), __('Id')).'</th>'.chr(10).
+	'		<th>'.HTML::anchor(order_by_link('payment_date', $link, $order_by, $order_desc, $order_desc2), __('Payed date')).'</th>'.chr(10).
+	'		<th>'.HTML::anchor(order_by_link('amount', $link, $order_by, $order_desc, $order_desc2), __('Amount')).'</th>'.chr(10).
+	'		<th>'.HTML::anchor(order_by_link('description', $link, $order_by, $order_desc, $order_desc2), __('Description')).'</th>'.chr(10).
 	'		<th>'.__('Intrest date').'</th>'.chr(10).
 	'		<th style="border: solid gray 1px;">'.__('Type').'</th>'.chr(10).
 	'		<th style="border: solid gray 1px;">'.__('Date').'</th>'.chr(10).
