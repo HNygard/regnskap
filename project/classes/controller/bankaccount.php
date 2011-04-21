@@ -18,6 +18,22 @@ class Controller_Bankaccount extends Controller_Template
 		
 		$query = DB::select()->order_by('num');
 		$this->template->accounts = Sprig::factory('account', array())->load($query, FALSE);
+		
+		$this->template->bankaccount = $bankaccount;
+	}
+	
+	public function action_transactionsnotimported ($bankaccount_id)
+	{
+		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
+		$this->template2->title = __('Not imported transactions on bank account').' '.$bankaccount->num;
+		$query = DB::select()->order_by('payment_date', 'DESC');
+		$query->where('imported', '=', false);
+		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
+		
+		$query = DB::select()->order_by('num');
+		$this->template->accounts = Sprig::factory('account', array())->load($query, FALSE);
+		
+		$this->template->bankaccount = $bankaccount;
 	}
 	
 	public function action_missingimports ($bankaccount_id)

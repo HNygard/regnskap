@@ -1,5 +1,16 @@
 <?php
 
+echo html::anchor('index.php/bankaccount/', __('Back to bank account list')).'<br />';
+
+if(isset($notimported) && $notimported)
+{
+	echo html::anchor('index.php/bankaccount/transactions/'.$bankaccount->id, __('Show all transactions on account'));
+}
+else
+{
+	echo html::anchor('index.php/bankaccount/transactionsnotimported/'.$bankaccount->id, __('Show not imported transactions only'));
+}
+
 echo '<div id="dialog-form" title="'.__('Create autoimport').'">
 	<span id="last_transaction_id" style="display: none;"></span>
 	<form>
@@ -17,8 +28,6 @@ echo '		</select><br />
 	</fieldset>
 	</form>
 </div>'.chr(10).chr(10);
-
-echo html::anchor('index.php/bankaccount/', __('Back to bank account list'));
 
 echo '<table>'.chr(10);
 echo
