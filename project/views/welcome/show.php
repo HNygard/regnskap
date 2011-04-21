@@ -58,6 +58,7 @@ foreach($by_month as $account_id => $account_months)
 }
 $query = $accounts->order_by('num')->execute();
 
+$months = array();
 foreach($query as $account)
 {
 	echo '	<tr>'.chr(10);
@@ -70,8 +71,40 @@ foreach($query as $account)
 			$this_month = 0;
 		
 		echo '		<td align="right">'.str_replace(' ', '&nbsp;', HTML::money($this_month)).'</td>'.chr(10);
+		if(!isset($months[$month]))
+			$months[$month] = 0;
+		$months[$month] += $this_month;
 	}
 	echo '	</tr>'.chr(10).chr(10);
 }
+
+// Not imported
+echo '	<tr>'.chr(10);
+echo '		<th>'.__('Not imported').'</th>'.chr(10);
+foreach($months as $month => $this_month)
+{
+	// $motnhs[$month] += $this_month;
+	$query = DB::select(array(DB::expr('SUM(amount)'), 'SUM'))->from('bankaccount_transactions');
+	$query->where('imported', '=', false);
+	$query->where('payment_date', '>=', mktime(0,0,0,substr($month,4,2),01,substr($month,0,4)));
+	$query->where('payment_date', '<', mktime(0,0,0,substr($month,4,2)+1,01,substr($month,0,4)));
+	$result = $query->execute();
+	foreach($result as $this_month)
+	{
+		echo '		<td align="right">'.str_replace(' ', '&nbsp;', 
+				HTML::money($this_month['SUM'])).'</td>'.chr(10);
+		$months[$month] += $this_month['SUM'];
+	}
+}
+echo '	</tr>'.chr(10);
+
+// Sum
+echo '	<tr>'.chr(10);
+echo '		<th>'.__('Sum').'</th>'.chr(10);
+foreach($months as $month => $this_month)
+{
+	echo '		<td align="right">'.str_replace(' ', '&nbsp;', HTML::money($this_month)).'</td>'.chr(10);
+}
+echo '	</tr>'.chr(10);
 
 echo '</table>'.chr(10).chr(10);
