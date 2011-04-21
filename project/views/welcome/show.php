@@ -46,7 +46,9 @@ echo '	<tr>'.chr(10);
 echo '		<th>&nbsp;</th>'.chr(10);
 for($month = $month_first; $month <= $month_last; $month = getNextMonth($month))
 {
-	echo '		<th>'.substr($month, 4).'.'.substr($month, 0, 4).'</th>'.chr(10);
+	echo '		<th>'.HTML::anchor('index.php/transaction/showbydate/'.
+					substr($month,0,4).'/'.substr($month,4,2)
+			, substr($month, 4).'.'.substr($month, 0, 4)).'</th>'.chr(10);
 }
 echo '	</tr>'.chr(10).chr(10);
 
@@ -70,7 +72,10 @@ foreach($query as $account)
 		else
 			$this_month = 0;
 		
-		echo '		<td align="right">'.str_replace(' ', '&nbsp;', HTML::money($this_month)).'</td>'.chr(10);
+		echo '		<td align="right">'.HTML::anchor('index.php/transaction/showaccountbydate/'.
+					$account['id'].'/'.
+					substr($month,0,4).'/'.substr($month,4,2)
+			, str_replace(' ', '&nbsp;', HTML::money($this_month))).'</td>'.chr(10);
 		if(!isset($months[$month]))
 			$months[$month] = 0;
 		$months[$month] += $this_month;
