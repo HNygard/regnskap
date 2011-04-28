@@ -21,10 +21,27 @@ class Controller_Bankaccount_Autoimport extends Controller_Template_Crud
 	}
 	public function action_createjs($account_id, $type, $text)
 	{
-		$autoimport = Sprig::factory('bankaccount_autoimport', array(
-				'account_id' => $account_id,
-				'type' => $type,
-				'text' => $text,
-			))->create();
+		try
+		{
+			$autoimport = Sprig::factory('bankaccount_autoimport', array(
+					'account_id' => $account_id,
+					'type' => $type,
+					'text' => $text,
+				))->create();
+		}
+		catch (Validation_Exception $e)
+		{
+			foreach($e->array->errors() as $key=> $errors)
+			{
+				foreach($errors as $error)
+				{
+					if(is_array($error))
+						echo $key.': '.implode(',', $error).chr(10);
+					else
+						echo $key.': '.$error.chr(10);
+				}
+			}
+			exit;
+		}
 	}
 }

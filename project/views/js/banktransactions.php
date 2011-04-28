@@ -40,7 +40,7 @@ $(document).ready(function() {
 								$('#autoimport_account_id :selected').text()
 							);
 					} else {
-						alert('Something went wrong! Not created!');
+						alert('Something went wrong! Not created!\n\n' + data);
 					}
 				});
 			},
