@@ -36,9 +36,13 @@ echo '		</select><br />
 		<input type="text" name="autoimport_time_max" id="autoimport_time_max" value="" class="text ui-widget-content ui-corner-all" /><br />
 		<label for="autoimport_bankaccount_id">'.__('Min time').'</label><br />
 		<input type="text" name="autoimport_time_min" id="autoimport_time_min" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<span id="autoimport_copy">'.__('Copy from current').'</span><br />
+		<a id="autoimport_copy" href="#">'.__('Copy from current').'</a><br />
 	</fieldset>
 	</form>
+	<span id="autoimport_copy_amount_max"></span>
+	<span id="autoimport_copy_amount_min"></span>
+	<span id="autoimport_copy_time_max"></span>
+	<span id="autoimport_copy_time_min"></span>
 </div>'.chr(10).chr(10);
 
 if($order_desc == 'desc')
@@ -81,14 +85,15 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 		'		<td>'.$bankaccount_transaction->id.'</td>'.chr(10).
 		'		<td>'.date('d.m.Y', $bankaccount_transaction->payment_date).'</td>'.chr(10).
 		'		<td style="text-align: right;">'.html::money($bankaccount_transaction->amount).'</td>'.chr(10).
+		'		<td style="display: none;" class="amount">'.$bankaccount_transaction->amount.'</td>'.chr(10).
 		'		<td>'.$bankaccount_transaction->description.'</td>'.chr(10).
 		'		<td>'.date('d.m.Y', $bankaccount_transaction->intrest_date).'</td>'.chr(10).
 		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->srbank_type.'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;">';
+		'		<td style="border: solid gray 1px;" class="time">';
 	if(!is_null($bankaccount_transaction->srbank_date))
 		echo date('d.m.Y', $bankaccount_transaction->srbank_date);
 	else
-		echo '&nbsp;';
+		echo date('d.m.Y', $bankaccount_transaction->payment_date);
 	echo '</td>'.chr(10).
 		'		<td style="border: solid gray 1px;" class="text">'.$bankaccount_transaction->srbank_text.'</td>'.chr(10).
 		'		<td class="button">';

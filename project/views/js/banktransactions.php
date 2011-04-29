@@ -8,6 +8,10 @@ $(document).ready(function() {
 		autoimport_amount_min = $('#autoimport_amount_min'),
 		autoimport_time_max = $('#autoimport_time_max'),
 		autoimport_time_min = $('#autoimport_time_min'),
+		autoimport_copy_amount_max = $('#autoimport_copy_amount_max'),
+		autoimport_copy_amount_min = $('#autoimport_copy_amount_min'),
+		autoimport_copy_time_max = $('#autoimport_copy_time_max'),
+		autoimport_copy_time_min = $('#autoimport_copy_time_min'),
 		last_transaction_id = $('#last_transaction_id');
 	
 	$('.canNotAutoimport').click(function () {
@@ -16,11 +20,27 @@ $(document).ready(function() {
 			parent(). // td
 			parent(); // tr
 		
+		// Set the type and text field to the values from the transaction
 		autoimport_type.val($('.type', $(tr)).text());
 		autoimport_text.val($('.text', $(tr)).text());
+		
+		// Copying some amount and time to a temp location
+		autoimport_copy_amount_max.text($('.amount', $(tr)).text());
+		autoimport_copy_amount_min.text($('.amount', $(tr)).text());
+		autoimport_copy_time_max.text($('.time', $(tr)).text());
+		autoimport_copy_time_min.text($('.time', $(tr)).text());
+		
 		last_transaction_id.text(tr.attr('id'));
 		
 		$( "#dialog-form" ).dialog( "open" );
+	});
+	
+	$('#autoimport_copy').click(function () {
+		
+		autoimport_amount_max.val(autoimport_copy_amount_max.text());
+		autoimport_amount_min.val(autoimport_copy_amount_min.text());
+		autoimport_time_max.val(autoimport_copy_time_max.text());
+		autoimport_time_min.val(autoimport_copy_time_min.text());
 	});
 
 	$('#dialog-form').dialog({
@@ -52,7 +72,7 @@ $(document).ready(function() {
 					function(data)
 				{
 					if(jQuery.trim(data) == 'ok') {
-						$('#'+last_transaction_id.text()+' td.button').
+						$('#'+last_transaction_id.text()+' td.button'). // TODO: This might not be true!
 							html('<img src="/regnskap/regnskap/webroot//images/tick.png" '+
 								'class="canAutoimport"> - '+
 								$('#autoimport_account_id :selected').text()
@@ -80,5 +100,3 @@ $(document).ready(function() {
 	
 	$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
 });
-df -h
-
