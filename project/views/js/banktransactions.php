@@ -42,7 +42,8 @@ $(document).ready(function() {
 					} else {
 						alert('Something went wrong! Not created!\n\n' + data);
 					}
-				});
+				})
+				.error(function() { alert("Error"); });
 			},
 			Cancel: function() {
 				$( this ).dialog( "close" );
