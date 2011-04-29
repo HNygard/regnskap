@@ -194,15 +194,85 @@ class Model_Bankaccount_Transaction extends Sprig {
 			array(
 				'text' => $this->srbank_text,
 				'type' => $this->srbank_type,
-			))->load();
+			))->load(); // TODO: Multiple
+		$autoimports = array();
+		$autoimports_errors = array();
 		if(!$autoimport->loaded())
 		{
-			return false;
+			
 		}
 		else
 		{
-			$this->autoimport_account_id = $autoimport->account_id;
+			$autoimports_errors[$autoimport->id] = array();
+			if(
+				!is_null($autoimport->bankaccount_id) && 
+				$autoimport->bankaccount_id != $this->bankaccount_id
+			)
+			{
+				// Account spesific and wrong account
+				$autoimports_errors[$autoimport->id][] = 'bankaccount_id';
+			}
+			
+			if(
+				!is_null($autoimport->amount_max) &&
+				$autoimport->amount_max < $this->amount
+			)
+			{
+				// Over the limited amount
+				$autoimports_errors[$autoimport->id][] = 'amount_max';
+			}
+			
+			if(
+				!is_null($autoimport->amount_min) &&
+				$autoimport->amount_min > $this->amount
+			)
+			{
+				// Under the limited amount
+				$autoimports_errors[$autoimport->id][] = 'amount_min';
+			}
+			
+			// TODO: move $time stuff to __get('time'), also used in autoimport()
+			// Checking date
+			if(!is_null($this->srbank_date))
+				$time = $this->srbank_date;
+			else
+				$time = $this->payment_date;
+			
+			if(
+				!is_null($autoimport->time_max) &&
+				$autoimport->time_max < $time
+			)
+			{
+				// Over the limited date
+				$autoimports_errors[$autoimport->id]['time_max'] = 
+					array('is' => $time, 'max was' => $autoimport->time_max);
+			}
+			if(
+				!is_null($autoimport->time_min) &&
+				$autoimport->time_min > $time
+			)
+			{
+				// Under the limited date
+				$autoimports_errors[$autoimport->id]['time_min'] = 
+					array('is' => $time, 'min was' => $autoimport->time_min);
+			}
+			
+			// FOUND A MATCH
+			if(!count($autoimports_errors[$autoimport->id]))
+			{
+				$this->autoimport_account_id = $autoimport->account_id;
+				$autoimports[$autoimport->id] = $autoimport;
+			}
+		}
+		
+		if(count($autoimports))
+		{
 			return true;
+		}
+		else
+		{
+			//print_r($autoimports_errors);
+			return false;
 		}
 	}
 	

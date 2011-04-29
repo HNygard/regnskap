@@ -3,6 +3,11 @@ $(document).ready(function() {
 	var autoimport_account_id = $('#autoimport_account_id'),
 		autoimport_type = $('#autoimport_type'),
 		autoimport_text = $('#autoimport_text'),
+		autoimport_bankaccount_id = $('#autoimport_bankaccount_id'),
+		autoimport_amount_max = $('#autoimport_amount_max'),
+		autoimport_amount_min = $('#autoimport_amount_min'),
+		autoimport_time_max = $('#autoimport_time_max'),
+		autoimport_time_min = $('#autoimport_time_min'),
 		last_transaction_id = $('#last_transaction_id');
 	
 	$('.canNotAutoimport').click(function () {
@@ -21,16 +26,29 @@ $(document).ready(function() {
 	$('#dialog-form').dialog({
 		autoOpen: false,
 		height: 300,
-		width: 350,
+		width: 650,
 		modal: true,
 		buttons: {
 			"Create an autoimport": function() {
 				// index.php/bankaccount_autoimport/createjs/ACCOUNTID/TYPE/TEXT
 				$('#dialog-form').dialog( "close" );
-				$.get('/regnskap/regnskap/webroot/index.php/bankaccount_autoimport/createjs/'+
+				
+				if(autoimport_bankaccount_id.attr('checked'))
+					var bankaccount_id_checkedvalue = autoimport_bankaccount_id.val();
+				else
+					var bankaccount_id_checkedvalue = '';
+				
+				var post = $.post('/regnskap/regnskap/webroot/index.php/bankaccount_autoimport/createjs/'+
 						autoimport_account_id.val()+'/'+
 						autoimport_type.val()+'/'+
 						autoimport_text.val(), 
+					{
+						amount_max: autoimport_amount_max.val(),
+						amount_min: autoimport_amount_min.val(),
+						time_max: autoimport_time_max.val(),
+						time_min: autoimport_time_min.val(),
+						bankaccount_id: bankaccount_id_checkedvalue,
+					},
 					function(data)
 				{
 					if(jQuery.trim(data) == 'ok') {
@@ -50,8 +68,17 @@ $(document).ready(function() {
 			}
 		},
 		close: function() {
-		}
+		},
+		open: function () {
+			autoimport_bankaccount_id.attr('checked', false);
+			autoimport_amount_max.val('');
+			autoimport_amount_min.val('');
+			autoimport_time_max.val('');
+			autoimport_time_min.val('');
+		},
 	});
 	
 	$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
 });
+df -h
+

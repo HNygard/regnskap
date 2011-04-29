@@ -24,7 +24,19 @@ echo '		</select><br />
 		<label for="autoimport_type">'.__('Type').'</label><br />
 		<input type="text" name="autoimport_type" id="autoimport_type" value="" class="text ui-widget-content ui-corner-all" /><br />
 		<label for="autoimport_text">'.__('Text').'</label><br />
-		<input type="text" name="autoimport_text" id="autoimport_text" value="" class="text ui-widget-content ui-corner-all" />
+		<input type="text" name="autoimport_text" id="autoimport_text" value="" class="text ui-widget-content ui-corner-all" /><br /><br />
+		<label for="autoimport_bankaccount_id">'.__('Only from this bankaccount?').'</label><br />
+		<input type="checkbox" name="autoimport_bankaccount_id" id="autoimport_bankaccount_id" value="'.$bankaccount->id.'" class="text ui-widget-content ui-corner-all">
+		<input type="text" name="autoimport_bankaccount_txt" id="autoimport_bankaccount_txt" value="'.$bankaccount->num.'" class="text ui-widget-content ui-corner-all" /><br />
+		<label for="autoimport_bankaccount_id">'.__('Max amount').'</label><br />
+		<input type="text" name="autoimport_amount_max" id="autoimport_amount_max" value="" class="text ui-widget-content ui-corner-all" /><br />
+		<label for="autoimport_bankaccount_id">'.__('Min amount').'</label><br />
+		<input type="text" name="autoimport_amount_min" id="autoimport_amount_min" value="" class="text ui-widget-content ui-corner-all" /><br />
+		<label for="autoimport_bankaccount_id">'.__('Max time').'</label><br />
+		<input type="text" name="autoimport_time_max" id="autoimport_time_max" value="" class="text ui-widget-content ui-corner-all" /><br />
+		<label for="autoimport_bankaccount_id">'.__('Min time').'</label><br />
+		<input type="text" name="autoimport_time_min" id="autoimport_time_min" value="" class="text ui-widget-content ui-corner-all" /><br />
+		<span id="autoimport_copy">'.__('Copy from current').'</span><br />
 	</fieldset>
 	</form>
 </div>'.chr(10).chr(10);
