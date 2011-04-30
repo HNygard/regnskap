@@ -190,18 +190,15 @@ class Model_Bankaccount_Transaction extends Sprig {
 		if(!isset($this->srbank_type))
 			return false;
 		
-		$autoimport = Sprig::factory('bankaccount_autoimport', 
-			array(
-				'text' => $this->srbank_text,
-				'type' => $this->srbank_type,
-			))->load(); // TODO: Multiple
+		$query = DB::select()
+				->where('text', '=', $this->srbank_text)
+				->where('type', '=', $this->srbank_type)
+			;
+		$autoimport_possibles = Sprig::factory('bankaccount_autoimport', array())->load($query, FALSE);
+		
 		$autoimports = array();
 		$autoimports_errors = array();
-		if(!$autoimport->loaded())
-		{
-			
-		}
-		else
+		foreach($autoimport_possibles as $autoimport)
 		{
 			$autoimports_errors[$autoimport->id] = array();
 			if(
