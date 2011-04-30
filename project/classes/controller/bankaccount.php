@@ -32,9 +32,6 @@ class Controller_Bankaccount extends Controller_Template
 		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
-		$query = DB::select()->order_by('num');
-		$this->template->accounts = Sprig::factory('account', array())->load($query, FALSE);
-		
 		$this->template->bankaccount = $bankaccount;
 	}
 	
@@ -62,10 +59,40 @@ class Controller_Bankaccount extends Controller_Template
 		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
+		$this->template->bankaccount = $bankaccount;
+	}
+	
+	public function action_transactionsnotimported_bymonth ($year, $month, $order_by = 'payment_date', $order_desc = 'desc')
+	{
+		$year = (int)$year;
+		$month = (int)$month;
+		$this->template->year   = $year;
+		$this->template->month  = $month;
+		
+		if(
+			$order_by != 'payment_date' && 
+			$order_by != 'amount' && 
+			$order_by != 'id' &&
+			$order_by != 'description')
+		{
+			$order_by = 'payment_date';
+		}
+		if($order_desc != 'desc' && $order_desc != 'asc')
+		{
+			$order_desc = 'desc';
+		}
+		$this->template->order_by    = $order_by;
+		$this->template->order_desc  = $order_desc;
+		
+		$this->template2->title = __('Not imported transactions on all bank accounts').' '.$month.'.'.$year;
+		$query = DB::select()->order_by($order_by, $order_desc);
+		$query->where('imported', '=', false);
+		$query->where('payment_date', '>=', mktime(0,0,0,$month,01,$year));
+		$query->where('payment_date', '<', mktime(0,0,0,$month+1,01,$year));
+		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
+		
 		$query = DB::select()->order_by('num');
 		$this->template->accounts = Sprig::factory('account', array())->load($query, FALSE);
-		
-		$this->template->bankaccount = $bankaccount;
 	}
 	
 	public function action_missingimports ($bankaccount_id)

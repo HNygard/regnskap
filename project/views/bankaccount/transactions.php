@@ -1,22 +1,34 @@
 <?php
 
-echo html::anchor('index.php/bankaccount/', __('Back to bank account list')).'<br />';
+if(!isset($bydate))
+	$bydate = false;
 
-if(isset($notimported) && $notimported)
+if(!$bydate)
 {
-	echo html::anchor('index.php/bankaccount/transactions/'.$bankaccount->id, __('Show all transactions on account'));
+	echo html::anchor('index.php/bankaccount/', __('Back to bank account list')).'<br />';
+
+	if(isset($notimported) && $notimported)
+	{
+		echo html::anchor('index.php/bankaccount/transactions/'.$bankaccount->id, __('Show all transactions on account'));
+	}
+	else
+	{
+		echo html::anchor('index.php/bankaccount/transactionsnotimported/'.$bankaccount->id, __('Show not imported transactions only'));
+	}
 }
-else
-{
-	echo html::anchor('index.php/bankaccount/transactionsnotimported/'.$bankaccount->id, __('Show not imported transactions only'));
-}
+
+$query = DB::select()->order_by('num');
+$accounts = Sprig::factory('account', array())->load($query, FALSE);
+
+$query = DB::select()->order_by('num');
+$bankaccounts = Sprig::factory('bankaccount', array())->load($query, FALSE);
 
 echo '<div id="dialog-form" title="'.__('Create autoimport').'">
 	<span id="last_transaction_id" style="display: none;"></span>
 	<form>
 	<fieldset>
 		<label for="autoimport_account_id">'.__('Account').'</label><br />
-		<select name="autoimport_account_id" id="autoimport_account_id" class="text ui-widget-content ui-corner-all">';
+		<select name="autoimport_account_id" id="autoimport_account_id" class="text ui-widget-content ui-corner-all">'.chr(10);
 foreach($accounts as $account)
 	echo '			<option value="'.$account->id.'">'.$account->name.'</option>'.chr(10);
 
@@ -26,8 +38,13 @@ echo '		</select><br />
 		<label for="autoimport_text">'.__('Text').'</label><br />
 		<input type="text" name="autoimport_text" id="autoimport_text" value="" class="text ui-widget-content ui-corner-all" /><br /><br />
 		<label for="autoimport_bankaccount_id">'.__('Only from this bankaccount?').'</label><br />
-		<input type="checkbox" name="autoimport_bankaccount_id" id="autoimport_bankaccount_id" value="'.$bankaccount->id.'" class="text ui-widget-content ui-corner-all">
-		<input type="text" name="autoimport_bankaccount_txt" id="autoimport_bankaccount_txt" value="'.$bankaccount->num.'" class="text ui-widget-content ui-corner-all" /><br />
+		<input type="checkbox" name="autoimport_bankaccount_id" id="autoimport_bankaccount_id" value="" class="text ui-widget-content ui-corner-all">
+		<select name="autoimport_bankaccount_txt" id="autoimport_bankaccount_txt" class="text ui-widget-content ui-corner-all">'.chr(10);
+foreach($bankaccounts as $bankaccount)
+	echo '			<option value="'.$bankaccount->id.'">'.$bankaccount->num.' ('.$bankaccount->type.')</option>'.chr(10);
+
+echo '		</select><br />
+		
 		<label for="autoimport_bankaccount_id">'.__('Max amount').'</label><br />
 		<input type="text" name="autoimport_amount_max" id="autoimport_amount_max" value="" class="text ui-widget-content ui-corner-all" /><br />
 		<label for="autoimport_bankaccount_id">'.__('Min amount').'</label><br />
@@ -36,7 +53,7 @@ echo '		</select><br />
 		<input type="text" name="autoimport_time_max" id="autoimport_time_max" value="" class="text ui-widget-content ui-corner-all" /><br />
 		<label for="autoimport_bankaccount_id">'.__('Min time').'</label><br />
 		<input type="text" name="autoimport_time_min" id="autoimport_time_min" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<button id="autoimport_copy">'.__('Copy from current').'</button><br />
+		<button id="autoimport_copy">'.__('Copy from current').'</button	><br />
 	</fieldset>
 	</form>
 	<span style="display: none;" id="autoimport_copy_amount_max"></span>
@@ -60,10 +77,22 @@ function order_by_link($should_be, $link, $order_by, $order_desc, $order_desc2)
 	else
 		return $link.$should_be.'/'.$order_desc;
 }
-$link = 'index.php/'.
-	Request::current()->controller().'/'.
-	Request::current()->action().'/'.
-	$bankaccount->id.'/';
+
+if(!$bydate)
+{
+	$link = 'index.php/'.
+		Request::current()->controller().'/'.
+		Request::current()->action().'/'.
+		$bankaccount->id.'/';
+}
+else
+{
+	$link = 'index.php/'.
+		Request::current()->controller().'/'.
+		Request::current()->action().'/'.
+		$year.'/'.
+		$month.'/';// TODO: not only for months
+}
 
 echo '<table>'.chr(10);
 echo

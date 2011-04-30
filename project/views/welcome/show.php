@@ -96,8 +96,12 @@ foreach($months as $month => $this_month)
 	$result = $query->execute();
 	foreach($result as $this_month)
 	{
-		echo '		<td align="right">'.str_replace(' ', '&nbsp;', 
-				HTML::money($this_month['SUM'])).'</td>'.chr(10);
+		echo '		<td align="right">'.
+				HTML::anchor('index.php/bankaccount/transactionsnotimported_bymonth/'.substr($month,0,4).'/'.substr($month,4,2),
+					str_replace(' ', '&nbsp;', 
+					HTML::money($this_month['SUM']))
+				).
+				'</td>'.chr(10);
 		$months[$month] += $this_month['SUM'];
 	}
 }
