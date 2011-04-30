@@ -1,10 +1,12 @@
 <?php
 
-echo '<ul>';
+echo '<table class="prettytable">';
 foreach($bankaccounts as $bankaccount)
 {
-	echo '	<li>'.
-			'<b>'.$bankaccount->num.':</b> '.
+	echo '	<tr>'.
+			'<th>'.$bankaccount->num.'</th>'.
+			'<td>'.$bankaccount->type.'</td>'.
+			'<td>'.
 			html::anchor(
 				'index.php/bankaccount/missingimports/'.$bankaccount->id,
 				__('Missing imports')
@@ -16,9 +18,15 @@ foreach($bankaccounts as $bankaccount)
 			).
 			', '.
 			html::anchor(
+				'index.php/bankaccount/transactionsnotimported/'.$bankaccount->id,
+				__('Not imported transactions')
+			).
+			', '.
+			html::anchor(
 				'index.php/bankaccount/autoimport/'.$bankaccount->id,
 				__('Automaticlly import transactions')
 			).
-		'</li>';
+			'</td>'.
+		'</tr>';
 }
-echo '</ul>';
+echo '</table>';

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 3.3.7deb5build0.10.10.1
+-- version 3.3.10deb1
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Apr 28, 2011 at 09:47 PM
--- Server version: 5.1.49
--- PHP Version: 5.3.3-1ubuntu9.3
+-- Generation Time: Apr 30, 2011 at 10:44 AM
+-- Server version: 5.1.54
+-- PHP Version: 5.3.5-1ubuntu7
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
 CREATE TABLE IF NOT EXISTS `bankaccounts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `num` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
 
