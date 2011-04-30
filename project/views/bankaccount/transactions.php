@@ -36,13 +36,13 @@ echo '		</select><br />
 		<input type="text" name="autoimport_time_max" id="autoimport_time_max" value="" class="text ui-widget-content ui-corner-all" /><br />
 		<label for="autoimport_bankaccount_id">'.__('Min time').'</label><br />
 		<input type="text" name="autoimport_time_min" id="autoimport_time_min" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<a id="autoimport_copy" href="#">'.__('Copy from current').'</a><br />
+		<button id="autoimport_copy">'.__('Copy from current').'</button><br />
 	</fieldset>
 	</form>
-	<span id="autoimport_copy_amount_max"></span>
-	<span id="autoimport_copy_amount_min"></span>
-	<span id="autoimport_copy_time_max"></span>
-	<span id="autoimport_copy_time_min"></span>
+	<span style="display: none;" id="autoimport_copy_amount_max"></span>
+	<span style="display: none;" id="autoimport_copy_amount_min"></span>
+	<span style="display: none;" id="autoimport_copy_time_max"></span>
+	<span style="display: none;" id="autoimport_copy_time_min"></span>
 </div>'.chr(10).chr(10);
 
 if($order_desc == 'desc')

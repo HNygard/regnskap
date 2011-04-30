@@ -41,6 +41,8 @@ $(document).ready(function() {
 		autoimport_amount_min.val(autoimport_copy_amount_min.text());
 		autoimport_time_max.val(autoimport_copy_time_max.text());
 		autoimport_time_min.val(autoimport_copy_time_min.text());
+		
+		return false;
 	});
 
 	$('#dialog-form').dialog({
