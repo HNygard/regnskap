@@ -101,6 +101,7 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template2->title = __('Missing imports on bank account').' '.$bankaccount->num;
 		
 		$query = DB::select()->order_by('from');
+		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_importfiles = Sprig::factory('bankaccount_importfile', array())->load($query, FALSE);
 	}
 	
