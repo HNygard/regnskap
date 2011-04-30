@@ -19,12 +19,12 @@ class Controller_Bankaccount_Autoimport extends Controller_Template_Crud
 		
 		return parent::before();
 	}
-	public function action_createjs($account_id, $type, $text)
+	public function action_createjs($account_id)
 	{
 		$data = array(
 			'account_id'      => (int)$account_id,
-			'type'            => $type,
-			'text'            => $text,
+			'type'            => null,
+			'text'            => null,
 			'amount_max'      => null,
 			'amount_min'      => null,
 			'time_max'        => null,
@@ -33,6 +33,14 @@ class Controller_Bankaccount_Autoimport extends Controller_Template_Crud
 		);
 		if(isset($_POST))
 		{
+			if(isset($_POST['type']) && $_POST['type'] != '')
+			{
+				$data['type'] = $_POST['type'];
+			}
+			if(isset($_POST['text']) && $_POST['text'] != '')
+			{
+				$data['text'] = $_POST['text'];
+			}
 			if(isset($_POST['amount_max']) && $_POST['amount_max'] != '' && is_numeric($_POST['amount_max']))
 			{
 				$data['amount_max'] = $_POST['amount_max'];

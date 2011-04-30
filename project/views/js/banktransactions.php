@@ -61,10 +61,10 @@ $(document).ready(function() {
 					var bankaccount_id_checkedvalue = '';
 				
 				var post = $.post('/regnskap/regnskap/webroot/index.php/bankaccount_autoimport/createjs/'+
-						autoimport_account_id.val()+'/'+
-						autoimport_type.val()+'/'+
-						autoimport_text.val(), 
+						autoimport_account_id.val(),
 					{
+						type: autoimport_type.val(),
+						text: autoimport_text.val(),
 						amount_max: autoimport_amount_max.val(),
 						amount_min: autoimport_amount_min.val(),
 						time_max: autoimport_time_max.val(),
