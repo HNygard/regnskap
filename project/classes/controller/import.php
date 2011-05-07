@@ -10,9 +10,25 @@ function csv_to_array($array)
 	return $csv_array;
 }
 
-class Controller_Import extends Controller
+class Controller_Import extends Controller_Template
 {
 	protected $srbank_main_folder = '../import/sr-bank';
+	function action_index ()
+	{
+		$this->template2->title = __('Import');
+	}
+	
+	public function before()
+	{
+		if($this->request->action() == 'srbank' || $this->request->action() == 'srbank_pdf')
+		{
+			$this->use_template2 = false;
+			$this->template = 'import/index';
+		}
+		
+		return parent::before();
+	}
+	
 	function action_srbank ()
 	{
 		//$Q = DB::query(Database::SELECT, "select * from `bankkontoer`")->execute();
@@ -89,5 +105,6 @@ class Controller_Import extends Controller
 			}
 		}
 		echo '</ul>';
+		exit;
 	}
 }

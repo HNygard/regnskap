@@ -23,7 +23,7 @@ if(Request::current()->controller() == 'bankaccount' && Request::current()->acti
 echo '<span style="font-size:0.8em;">'.chr(10).
 
 html::anchor('index.php/', __('Overview')).' -:- '.chr(10).
-html::anchor('index.php/import/srbank', __('Import')).' -:- '.chr(10).
+html::anchor('index.php/import', __('Import')).' -:- '.chr(10).
 html::anchor('index.php/bankaccount', __('Bank accounts')).' -:- '.chr(10).
 '<br>'.chr(10).chr(10).
 __('Administration').': '.chr(10).
