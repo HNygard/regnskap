@@ -83,7 +83,7 @@ class Controller_Import extends Controller
 					echo __('Not jet imported');
 				}
 				echo '<ul><li>';
-					$importfile->importFromFile();
+					$importfile->importFromSRbank_CSVFile();
 				echo '</li></ul>';
 				echo '</li>';
 			}

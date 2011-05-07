@@ -2,6 +2,11 @@
 
 class Model_Bankaccount_Importfile extends Sprig {
 	
+	private $transactions = array();
+	private $transactions_new = 0;
+	private $transactions_not_imported = 0;
+	private $transactions_already_imported = 0;
+	
 	protected function _init()
 	{
 		$this->_fields += array(
@@ -20,7 +25,43 @@ class Model_Bankaccount_Importfile extends Sprig {
 		);
 	}
 	
-	public function importFromFile()
+	public function create_transactions ()
+	{
+		//$this->transactions_new = 0; // Nye
+		//$this->transactions_already_imported; // Allerede inne
+		//$this->transactions_not_imported; // 
+		
+		$this->from  = null;
+		$this->to    = null;
+		foreach($this->transactions as $transaction_array)
+		{
+			$transaction = Sprig::factory('bankaccount_transaction', $transaction_array)->load();
+			if($transaction->loaded())
+			{
+				$this->transactions_already_imported++;
+				//echo $transaction.' - '.__('Already in database');
+			}
+			else
+			{
+				$transaction->create();
+				$this->transactions_new++;
+				//echo $transaction.' - '.__('Not imported jet');
+			}
+			//echo '<br>';
+			
+			if(is_null($this->from))
+				$this->from = $transaction->payment_date;
+			elseif($this->from > $transaction->payment_date)
+				$this->from = $transaction->payment_date; // Older transaction
+			
+			if(is_null($this->to))
+				$this->to = $transaction->payment_date;
+			elseif($this->to < $transaction->payment_date)
+				$this->to = $transaction->payment_date; // Newer transaction
+		}
+	}
+	
+	public function importFromSRbank_CSVFile()
 	{
 		if(!isset($this->filepath) || $this->filepath == '')
 		{
@@ -29,13 +70,6 @@ class Model_Bankaccount_Importfile extends Sprig {
 		
 		// Parser filer
 		$csv_array = csv_to_array(explode("\n", file_get_contents($this->filepath)));
-		
-		$new = 0; // Nye
-		$already_imported = 0; // Allerede inne
-		$not_imported = 0; // 
-		
-		$this->from  = null;
-		$this->to    = null;
 		
 		foreach($csv_array as $csv)
 		{
@@ -51,7 +85,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 				{
 					//echo __('One with no intrest date, not importing.');
 					//echo '<br />';
-					$not_imported++;
+					$this->transactions_not_imported++;
 					continue;
 				}
 				
@@ -61,45 +95,24 @@ class Model_Bankaccount_Importfile extends Sprig {
 				if(strlen($csv[2]) > 10) // 01.08.2008-00:00:00
 					$csv[2] = substr($csv[2], 0, 10); // 01.08.2008
 				
-				$transaction = Sprig::factory('bankaccount_transaction',
-						array(
-							'bankaccount_id' => $this->bankaccount_id,
-							'payment_date'   => utf8::clean($csv[0]),
-							'intrest_date'   => utf8::clean($csv[2]),
-							'description'    => utf8_encode($csv[1]),
-							'amount'         => str_replace(',', '.', utf8::clean($csv[3])),
-						)
-					)->load();
-				if($transaction->loaded())
-				{
-					$already_imported++;
-					//echo $transaction.' - '.__('Already in database');
-				}
-				else
-				{
-					$transaction->create();
-					$new++;
-					//echo $transaction.' - '.__('Not imported jet');
-				}
-				//echo '<br>';
-				
-				if(is_null($this->from))
-					$this->from = $transaction->payment_date;
-				elseif($this->from > $transaction->payment_date)
-					$this->from = $transaction->payment_date; // Older transaction
-				
-				if(is_null($this->to))
-					$this->to = $transaction->payment_date;
-				elseif($this->to < $transaction->payment_date)
-					$this->to = $transaction->payment_date; // Newer transaction
+				$this->transactions[] = array(
+						'bankaccount_id' => $this->bankaccount_id,
+						'payment_date'   => utf8::clean($csv[0]),
+						'intrest_date'   => utf8::clean($csv[2]),
+						'description'    => utf8_encode($csv[1]),
+						'amount'         => str_replace(',', '.', utf8::clean($csv[3])),
+					);
 			}
 		}
+		
+		$this->create_transactions();
+		
 		echo '<b>'.__('From').':</b> '.date('d-m-Y', $this->from).'</li><li>';
 		echo '<b>'.__('To').':</b> '.date('d-m-Y', $this->to).'</li><li>';
 		echo 
-			__('Imported').': '.$new.', '.
-			__('Already in database').': '.$already_imported.', '.
-			__('No intrest date (not imported)').': '.$not_imported;
+			__('Imported').': '.$this->transactions_new.', '.
+			__('Already in database').': '.$this->transactions_already_imported.', '.
+			__('No intrest date (not imported)').': '.$this->transactions_not_imported;
 
 		
 		$this->last_imported = time();
