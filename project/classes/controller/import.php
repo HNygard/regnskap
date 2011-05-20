@@ -13,6 +13,8 @@ function csv_to_array($array)
 class Controller_Import extends Controller_Template
 {
 	protected $srbank_main_folder = '../import/sr-bank';
+	protected $srbank_pdf_main_folder = '../import/sr-bank_pdf';
+	
 	function action_index ()
 	{
 		$this->template2->title = __('Import');
@@ -103,6 +105,75 @@ class Controller_Import extends Controller_Template
 				echo '</li></ul>';
 				echo '</li>';
 			}
+		}
+		echo '</ul>';
+		exit;
+	}
+	
+	function action_srbank_pdf ()
+	{
+		/*
+		$files_found = array(
+				'filepath',
+				'filepath',
+			);
+		*/
+		$files_found = array();
+		$folder = $this->srbank_pdf_main_folder.'/';
+		echo '<li><b>'.__('Files found').':</b><ul>';
+	
+		// Getting files from the folder:
+		if (file_exists($folder) && $handle = opendir($folder))
+		{
+			while (false !== ($file = readdir($handle)))
+			{
+				if($file != '..' && $file != '.')
+				{
+					echo '<li>'.$folder.$file.'</li>';
+					$files_found[] = $folder.$file;
+				}
+			}
+		}
+		else
+		{
+			// Folder not found
+			echo '<span style="color: red;">'.__('Folder does not exist: :folder',
+				array(':folder' => $folder)).'.</span>';
+		}
+		echo '</ul></li>';
+		echo '</ul>';
+	
+		echo '<ul>';
+		foreach($files_found as $file)
+		{
+			if($file == '../import/sr-bank_pdf/.gitignore')
+				continue;
+			
+			echo '<li><b>'.$file.'</b> ';
+			$importfile = Sprig::factory('bankaccount_importfile', 
+				array(
+					'filepath' => $file,
+				));
+			echo '<ul><li>';
+			$importfile->load();
+			if($importfile->loaded())
+			{
+				echo __('Already imported');
+			}
+			else
+			{
+				echo __('Not jet imported');
+			}
+			try {
+echo '<table>';
+				$importfile->importFromSRbank_PDFFile();
+			} catch (Exception $e) {
+				echo '</li><li style="color: red;">'.$e->getMessage().'<br /><b>Transactions: </b>';
+				print_r($importfile->transactions);
+			}
+echo '</table>';
+			echo '</li></ul>';
+			echo '</li>';
 		}
 		echo '</ul>';
 		exit;
