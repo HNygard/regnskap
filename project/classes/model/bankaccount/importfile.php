@@ -365,7 +365,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 	function importFromSRbank_PDFFile ()
 	{
 		$statementparser = new sb1parser();
-		$statementparser->importPDF(@file_get_contents($this->filepath, FILE_BINARY));
+		$statementparser->importPDF(file_get_contents($this->filepath, FILE_BINARY));
 		
 		foreach($statementparser->getAccounts() as $account)
 		{
