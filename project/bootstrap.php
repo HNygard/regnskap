@@ -106,6 +106,7 @@ Kohana::modules(array(
 	// 'unittest'   => MODPATH.'unittest',   // Unit testing
 	// 'userguide'  => MODPATH.'userguide',  // User guide and API documentation
 	 'sprig'   => MODPATH.'sprig',   // Database access
+	 'sparebank1_statementparser' => '../sparebank1_statementparser', // Statement parser
 	));
 
 /**
