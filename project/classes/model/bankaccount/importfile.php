@@ -373,8 +373,8 @@ class Model_Bankaccount_Importfile extends Sprig {
 			
 			echo '<li>';
 			echo '<b>'.__('Bankaccount').':</b> '.$account['account_num'].', '.
-				__('From').': '.date('d-m-Y', $account['accountoverview_start']).', '.
-				__('To').': '.date('d-m-Y', $account['accountoverview_end']).'</li><li>';
+				__('From').': '.date('d-m-Y', $account['accountstatement_start']).', '.
+				__('To').': '.date('d-m-Y', $account['accountstatement_end']).'</li><li>';
 			echo 
 				__('Imported').': '.$this->transactions_new.', '.
 				__('Already in database').': '.$this->transactions_already_imported.', '.
@@ -386,12 +386,12 @@ class Model_Bankaccount_Importfile extends Sprig {
 			//echo '<tr><td colspan="5">'; print_r($account); echo '</td></tr>';
 			
 			/*
-			echo '<tr><td>accountoverview_num: '.$account['accountoverview_num'].'</td></tr>';
-			echo '<tr><td>accountoverview_start: '.$account['accountoverview_start'].'</td></tr>';
-			echo '<tr><td>accountoverview_end: '.$account['accountoverview_end'].'</td></tr>';
+			echo '<tr><td>accountstatement_num: '.$account['accountstatement_num'].'</td></tr>';
+			echo '<tr><td>accountstatement_start: '.$account['accountstatement_start'].'</td></tr>';
+			echo '<tr><td>accountstatement_end: '.$account['accountstatement_end'].'</td></tr>';
 			echo '<tr><td>account_type: '.$account['account_type'].'</td></tr>';
-			echo '<tr><td>accountoverview_balance_in: '.$account['accountoverview_balance_in'].'</td></tr>';
-			echo '<tr><td>accountoverview_balance_out: '; var_dump($account['accountoverview_balance_out']); echo '</td></tr>';
+			echo '<tr><td>accountstatement_balance_in: '.$account['accountstatement_balance_in'].'</td></tr>';
+			echo '<tr><td>accountstatement_balance_out: '; var_dump($account['accountstatement_balance_out']); echo '</td></tr>';
 			echo '<tr><td>control_amount: '; var_dump($account['control_amount']); echo '</td></tr>';
 			*/
 		}
