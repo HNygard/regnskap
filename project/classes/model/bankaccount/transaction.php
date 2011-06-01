@@ -9,9 +9,24 @@ class Model_Bankaccount_Transaction extends Sprig {
 			)),
 			'bankaccount_id' => new Sprig_Field_Integer(array(
 			)),
+			'date' => new Sprig_Field_Timestamp(array(
+				'empty'    => true,
+				'default'  => null,
+				'null'     => true,
+			)),
 			'payment_date' => new Sprig_Field_Timestamp(array(
 			)),
 			'intrest_date' => new Sprig_Field_Timestamp(array(
+			)),
+			'type_csv' => new Sprig_Field_Char(array(
+				'empty'    => true,
+				'default'  => null,
+				'null'     => false,
+			)),
+			'type_pdf' => new Sprig_Field_Char(array(
+				'empty'    => true,
+				'default'  => null,
+				'null'     => false,
 			)),
 			'description' => new Sprig_Field_Char(array(
 			)),
@@ -59,123 +74,16 @@ class Model_Bankaccount_Transaction extends Sprig {
 	 */
 	public function analyse_srbank()
 	{
-		// Analyse according to the following types for transactions:
-		
-		// VARER: 15.10 SHOP AND OTHER INFO
-		// VISA VARE: 1234567890000000 15.10 NOK 1234,00 FIRMA
-		// VISA SET: 1234567890000000 05.11 NOK 100,00 ICE.NET
-		
-		// LØNN: Tekst
-		// SKATT: Fra: SKATTEKONTOR Betalt: 15.10.09
-		// INNSKUDD AUTOMAT: 15.10 SR-Bank Navn og adresse
-		
-		// MINIBANK: 15.10 SR-Bank Navn og adresse
-		// MINIBANK-UTTAK I FREMMED BANK: 15.10 Navn på bank, adresse
-		
-		// NETTGIRO M/MELD. FORFALL I DAG: Nettgiro til: 1234.56.78901 Betalt: 15.10.09
-		// NETTBANK OVERFØRSEL EGNE KONTI: Nettbank fra: NORDMANN OLA Betalt: 15.10.09
-		// NETTGIRO M/KID PÅ FORFALLSREG.: Nettgiro til: BEDRIFT AS Betalt: 15.10.09
-		// NETTGIRO MED KID FORFALL I DAG: Nettgiro til: Bedrift Betalt: 15.10.09
-		// OVERFØRT TIL ANNEN KTO: Til:12345678901
-		// OVERFØRSEL: FRA STATENS LÅNEKASSE FOR UTDANNIN
-		// NETTBANK OVERFØRSEL EGNE KONTI: melding
-		
-		// GEBYR: KONTOHOLD
-		// OPPRETTING - Retur av for mye innbetalt på BSU-konto 12345678901. Fra:
-		
 		$this->loadedOrThrowException();
 		
-		$pos = strpos($this->description, ':');
-		if($pos === false)
-		{
-			$this->srbank_type = 'UNKNOWN';
-		}
+		if(!is_null($this->type_csv))
+			$this->srbank_type = $this->type_csv;
+		elseif(!is_null($this->type_pdf))
+			$this->srbank_type = $this->type_pdf;
 		else
-		{
-			$this->srbank_type = substr($this->description, 0, $pos);
-			$this->srbank_text = trim(substr($this->description, $pos+1));
-			switch($this->srbank_type)
-			{
-				case 'VARER':
-				case 'INNSKUDD AUTOMAT':
-				case 'MINIBANK':
-				case 'MINIBANK-UTTAK I FREMMED BANK':
-					// Format:
-					// TYPE: 15.10 TEXT
-					
-					
-					
-					$this->srbank_date = $this->getDateWithYear(substr($this->srbank_text, 0, 5));
-					$this->srbank_text = trim(substr($this->srbank_text, 5));
-					break;
-				case 'SKATT':
-				case 'NETTGIRO M/MELD. FORFALL I DAG':
-				case 'NETTBANK OVERFØRSEL EGNE KONTI':
-				case 'NETTGIRO M/KID PÅ FORFALLSREG.':
-				case 'NETTGIRO MED KID FORFALL I DAG':
-					// Format:
-					// TYPE: TEXT Betalt: 15.10.09
-					$betalt_pos = strpos($this->srbank_text, 'Betalt: ');
-					if($betalt_pos !== false) // Found "Betalt: "
-					{
-						$date_tmp = substr($this->srbank_text, $betalt_pos+strlen('Betalt: '));
-						if(substr($date_tmp, 6) >= 90) // year 1990-1999
-							$date_tmp = substr($date_tmp, 0, 6).'19'.substr($date_tmp, 6);
-						else // year 2000-2099
-							$date_tmp = substr($date_tmp, 0, 6).'20'.substr($date_tmp, 6);
-						$this->srbank_date = $date_tmp;
-						$this->srbank_text = trim(substr($this->srbank_text, 0, $betalt_pos));
-					}
-					break;
-				case 'VISA VARE':
-				case 'VISA SET':
-					// Format:
-					// TYPE: number date currency amount FromWho
-					
-					// Splitting: 1234567890000000 15.10 NOK 1234,00 Company AS
-					// To array: array('1234567890000000', '15.10', 'NOK', '1234,00', 'Company AS')
-					$parts = explode(' ', $this->srbank_text, 5);
-					if(count($parts) != 5) {
-						break;
-					}
-					
-					$this->srbank_date = $this->getDateWithYear($parts[1]);
-					$this->srbank_text = $parts[4];
-					break;
-			}
-			
-			// Remove a few characters that we use in URIs
-			$this->srbank_type = str_replace('/', ' ', $this->srbank_type);
-			$this->srbank_text = str_replace('/', ' ', $this->srbank_text);
-			$this->srbank_type = str_replace('.', '',  $this->srbank_type);
-			$this->srbank_text = str_replace('.', '',  $this->srbank_text);
-		}
-	}
-	
-	/**
-	 * Get the date including the year
-	 * 
-	 * If the transaction is done on a friday, saturday or sunday the date
-	 * on the recite will differ from payment_date.
-	 *
-	 * @param  String  Date with format "dd.mm"
-	 * @return String  Date with format "dd.mm.YYYY"
-	 */
-	public function getDateWithYear ($tmp)
-	{
-		// Adding year
-		if(
-			($tmp == '31.12' || $tmp == '30.12' || $tmp == '29.12') &&
-			date('m', $this->payment_date) == '01'
-		)
-		{
-			$tmp = $tmp.'.'.(date('Y', $this->payment_date)-1);
-		}
-		else
-		{
-			$tmp = $tmp.'.'.date('Y', $this->payment_date);
-		}
-		return $tmp;
+			$this->srbank_type = null;
+		$this->srbank_date = $this->date;
+		$this->srbank_text = $this->description;
 	}
 	
 	/**
@@ -322,5 +230,20 @@ class Model_Bankaccount_Transaction extends Sprig {
 		$this->update();
 		
 		return true;
+	}
+	
+	/*
+	 * Gets type from type_pdf or type_csv or returns null
+	 * 
+	 * @return  string/null
+	 */
+	public function getType ()
+	{
+		if(!is_null($this->type_pdf) && $this->type_pdf != '')
+			return $this->type_pdf;
+		elseif(!is_null($this->type_csv) && $this->type_csv != '')
+			return $this->type_csv;
+		else
+			return null;
 	}
 }

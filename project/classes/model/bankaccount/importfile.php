@@ -35,50 +35,104 @@ class Model_Bankaccount_Importfile extends Sprig {
 		$this->to    = null;
 		foreach($transactions as $transaction_array)
 		{
+			$transaction_array['description'] = str_replace('ß', 'ø', $transaction_array['description']); // encoding fix
+			$transaction_array['description'] = str_replace('¿', 'ø', $transaction_array['description']); // encoding fix
+			
+			/*
+			 * We have a match if:
+			 * - Description is the same in lower case
+			 * - Date is the same
+			 * - Amount is the same
+			 * - bankaccount_id is the same
+			 */
+			
+			$selector = $transaction_array;
+			unset($selector['description']); // Not matching on description, doing it "manually"
+			unset($selector['type_csv']); // Checking "manually"
+			unset($selector['type_pdf']); // Checking "manually"
+			
 			$tmp = $transaction_array['description']; // Saving description
 			unset($transaction_array['description']); // Not matching on description, doing it "manually"
 			
-			$transaction = Sprig::factory('bankaccount_transaction', $transaction_array)->load();
-			if($transaction->loaded())
+			$transactions = Sprig::factory('bankaccount_transaction', $selector)->load(NULL, FALSE);
+			
+			$no_match = true;
+			$type = '';
+			foreach($transactions as $transaction)
 			{
 				// Trying to match
-				$transaction->description = str_replace('ß', 'ø', $transaction->description); // encoding fix
-				$transaction->description = str_replace('¿', 'ø', $transaction->description); // encoding fix
-				$transaction->description = 
-					str_replace('NETTGIRO M/MELD. FORFALL I DAG: ', '',
-					str_replace('NETTBANK OVERFØRSEL EGNE KONTI: ', '',
-					str_replace('NETTGIRO M/KID PÅ FORFALLSREG.: ', '',
-					str_replace('NETTGIRO MED KID FORFALL I DAG: ', '',
-					str_replace('OVERFØRT TIL ANNEN KTO: ', '',
-					str_replace('NETTBANK OVERFØRSEL EGNE KONTI: ', '',
-					$transaction->description)))))); // Removing info not in PDF (are in CSV)
-				
-				echo '<tr><td>'.$tmp.'</td><td>'.(mb_strtolower($tmp) == mb_strtolower($transaction->description)).
-					'</td><td>'.$transaction->description.'</td></tr>';
-				
-				if(mb_strtolower($tmp) != mb_strtolower($transaction->description))
+				$type = '';
+				if(!is_null($transaction->type_pdf))
+					$type = 'type_pdf';
+				if(!is_null($transaction->type_csv))
+				{
+					if($type == '')
+						$type = 'type_csv';
+					else
+						$type .= ',type_csv';
+				}
+			
+				if(
+					mb_strtolower($tmp) != mb_strtolower($transaction->description) ||
+					(
+						!is_null($transaction->getType()) &&
+						(
+							(
+								isset($transaction_array['type_pdf']) && 
+								$transaction_array['type_pdf'] != '' &&
+								$transaction_array['type_pdf'] != $transaction->getType()
+							) ||
+							(
+								isset($transaction_array['type_csv']) && 
+								$transaction_array['type_csv'] != '' &&
+								$transaction_array['type_csv'] != $transaction->getType()
+							)
+						)		
+					)
+				)
 				{
 					// Not matching
-					$transaction_array['description'] = $tmp;
-					$transaction = Sprig::factory('bankaccount_transaction', $transaction_array);
-					// TODO: enable
-					//$transaction->create();
-					$this->transactions_new++;
 				}
 				else
 				{
+					// Update?
+					$updates = array();
+					if(isset($transaction_array['type_csv']) &&
+						is_null($transaction->type_csv) && !is_null($transaction_array['type_csv']))
+						$updates['type_csv'] = $transaction_array['type_csv'];
+					if(isset($transaction_array['type_pdf']) &&
+						is_null($transaction->type_pdf) && !is_null($transaction_array['type_pdf']))
+						$updates['type_pdf'] = $transaction_array['type_pdf'];
+					// Checking if this description has a higher amount of lower case characters
+					// => more lower case = better description. CSV puts most in upper case
+					// TODO: 
+				
+					if(count($updates))
+					{
+						// TODO: report back to 
+						$transaction->values($updates)->update();
+						echo 'update'.print_r($updates, true).'<br>';
+					}
 					$this->transactions_already_imported++;
 					//echo $transaction.' - '.__('Already in database');
+					
+					$no_match = false;
+					break;
 				}
 			}
-			else
+			
+			if($no_match)
 			{
-				// TODO: Enable
-				//$transaction->create();
+				// No match found
+				$transaction_array['description'] = $tmp;
+				$transaction = Sprig::factory('bankaccount_transaction', $transaction_array);
+				$transaction->create();
 				$this->transactions_new++;
-				//echo $transaction.' - '.__('Not imported jet');
+				
+				echo '<tr><td>'.$type.'</td><td>'.$tmp.'</td><td>'.
+					(mb_strtolower($tmp) == mb_strtolower($transaction->description)).
+					'</td><td>'.$transaction->description.'</td></tr>';
 			}
-			//echo '<br>';
 			
 			if(is_null($this->from))
 				$this->from = $transaction->payment_date;
@@ -128,7 +182,8 @@ class Model_Bankaccount_Importfile extends Sprig {
 				
 				$this->transactions[] = array(
 						'bankaccount_id' => $this->bankaccount_id,
-						'payment_date'   => utf8::clean($csv[0]),
+						'payment_date'   => Model_Bankaccount_Importfile::
+						                    convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
 						'intrest_date'   => utf8::clean($csv[2]),
 						'description'    => utf8_encode($csv[1]),
 						'amount'         => str_replace(',', '.', utf8::clean($csv[3])),
@@ -136,7 +191,160 @@ class Model_Bankaccount_Importfile extends Sprig {
 			}
 		}
 		
-		$this->create_transactions($this->transactions);
+		$new_transactions = array();
+		foreach($this->transactions as $transaction)
+		{
+			// Analyse according to the following types for transactions:
+		
+			// VARER: 15.10 SHOP AND OTHER INFO
+			// VAREKJØP: 26.02 SHOP AND OTHER INFO
+			// VISA VARE: 1234567890000000 15.10 NOK 1234,00 FIRMA
+			// VISA SET: 1234567890000000 15.10 NOK 100,00 FIRMA
+			// VISA ELEKTRON: *1234 15.10 SEK 1234,56 FIRMA KURS: 0,1234
+			// KONTANTUTTAK: *1234 15.10 SEK 1500,00 BANK NAME KURS: 0,1234
+		
+			// LØNN: Tekst
+			// SKATT: Fra: SKATTEKONTOR Betalt: 15.10.09
+			// INNSKUDD AUTOMAT: 15.10 SR-Bank Navn og adresse
+		
+			// MINIBANK: 15.10 SR-Bank Navn og adresse
+			// MINIBANK-UTTAK I FREMMED BANK: 15.10 Navn på bank, adresse
+		
+			// NETTGIRO M/MELD. FORFALL I DAG: Nettgiro til: 1234.56.78901 Betalt: 15.10.09
+			// NETTGIRO M/KID PÅ FORFALLSREG.: Nettgiro til: BEDRIFT AS Betalt: 15.10.09
+			// NETTGIRO MED KID FORFALL I DAG: Nettgiro til: Bedrift Betalt: 15.10.09
+			// NETTGIRO M/MELD. PÅ FORFALL: Nettgiro til: 1234.56.78901 Betalt: 15.10.09
+			// NETTBANK OVERFØRSEL EGNE KONTI: Nettbank fra: NORDMANN OLA Betalt: 15.10.09
+			// E-FAKTURA: Nettgiro til: 1234.56.78901 Betalt: 15.10.09
+			// GIRO: Fra: Navn Betalt: 15.10.09
+			// TELEGIRO I DAG M/MELDING: Telegiro fra: NAVN Betalt: 15.10.09
+			
+			// NETTBANK: Fra:12345678901
+			// OVERFØRT TIL ANNEN KTO: Til:12345678901
+			// OVERFØRSEL: FRA STATENS LÅNEKASSE FOR UTDANNIN
+			// NETTBANK OVERFØRSEL EGNE KONTI: melding
+			// AVTALEGIRO: AGREEMENT NAME 123456
+			// OVERFØRSEL UTLAND: AB1234567890123A
+		
+			// GEBYR: KONTOHOLD
+			// BRUKSRENTER: KREDITRENTER
+			// OPPRETTING - Retur av for mye innbetalt på BSU-konto 12345678901. Fra:
+			
+			// VALUTA: Fra: Name
+			// UTTAK: Optional message
+		
+			// TODO: fix oppretting
+			$transaction['description'] = Model_Bankaccount_Importfile::
+				replace_firstpart_if_found ($transaction['description'], 'OPPRETTING - ', 'OPPRETTING: ');
+			$pos = strpos($transaction['description'], ':');
+			$original_description = $transaction['description'];
+			if($pos === false)
+			{
+				$transaction['type_csv'] = 'UNKNOWN';
+			}
+			else
+			{
+				$transaction['type_csv']     = substr($original_description, 0, $pos);
+				$transaction['description']  = trim(substr($original_description, $pos+1));
+				switch($transaction['type_csv'])
+				{
+					case 'VARER':
+					case 'VAREKJØP':
+					case 'INNSKUDD AUTOMAT':
+					case 'MINIBANK':
+					case 'MINIBANK-UTTAK I FREMMED BANK':
+						// Format:
+						// TYPE: 15.10 TEXT
+						$transaction['date']         = 
+							Model_Bankaccount_Importfile::
+							getDateWithYear(substr($transaction['description'], 0, 5), $transaction['payment_date']);
+						$transaction['description']  = trim(substr($transaction['description'], 5));
+						break;
+					case 'SKATT':
+					case 'NETTGIRO M/MELD. FORFALL I DAG':
+					case 'NETTGIRO M/KID PÅ FORFALLSREG.':
+					case 'NETTGIRO MED KID FORFALL I DAG':
+					case 'NETTGIRO M/MELD. PÅ FORFALL':
+					case 'NETTBANK OVERFØRSEL EGNE KONTI':
+					case 'E-FAKTURA':
+					case 'GIRO':
+					case 'TELEGIRO I DAG M/MELDING':
+						// Format:
+						// TYPE: TEXT Betalt: 15.10.09
+						$betalt_pos = strpos($transaction['description'], 'Betalt: ');
+						if($betalt_pos !== false) // Found "Betalt: "
+						{
+							$date_tmp = substr($transaction['description'], $betalt_pos+strlen('Betalt: '));
+							if(substr($date_tmp, 6) >= 90) // year 1990-1999
+								$date_tmp = substr($date_tmp, 0, 6).'19'.substr($date_tmp, 6);
+							else // year 2000-2099
+								$date_tmp = substr($date_tmp, 0, 6).'20'.substr($date_tmp, 6);
+							$transaction['date']         = $date_tmp;
+							$transaction['description']  = trim(substr($transaction['description'], 0, $betalt_pos));
+						}
+						break;
+					case 'VISA VARE':
+					case 'VISA SET':
+					case 'VISA ELEKTRON':
+					case 'KONTANTUTTAK':
+						// Format:
+						// TYPE: number date currency amount FromWho
+					
+						// Splitting: 1234567890000000 15.10 NOK 1234,00 Company AS
+						// To array: array('1234567890000000', '15.10', 'NOK', '1234,00', 'Company AS')
+						$parts = explode(' ', $transaction['description'], 5);
+						if(count($parts) != 5) {
+							break;
+						}
+					
+						$transaction['date'] = 
+							Model_Bankaccount_Importfile::
+							getDateWithYear($parts[1], $transaction['payment_date']);
+						$transaction['description'] = $parts[4];
+						break;					
+					case 'UTTAK':
+						if($transaction['description'] == '')
+							$transaction['description'] = __('No withdrawal message');
+					case 'LØNN':
+					case 'OVERFØRT TIL ANNEN KTO':
+					case 'OVERFØRSEL':
+					case 'GEBYR':
+					case 'BRUKSRENTER':
+					case 'AVTALEGIRO':
+					case 'VALUTA':
+					case 'NETTBANK':
+					case 'OVERFØRSEL UTLAND':
+					case 'OPPRETTING':
+						break;
+					
+					case 'Fra':
+						$transaction['type_csv'] = null;
+						$transaction['description'] = $transaction['type_csv'].': '.$transaction['description'];
+						break;
+					
+					default:
+						if($transaction['description'] == '')
+							$transaction['description'] = $transaction['type_csv'];
+						else
+							$transaction['description'] = $transaction['type_csv'].': '.$transaction['description'];
+						throw new Kohana_Exception('Unknown transaction type. type_csv: :type_csv, description: :description',
+							array(':type_csv' => $transaction['type_csv'], 
+								':description' => $transaction['description']));
+						$transaction['type_csv'] = 'UNKNOWN';
+						
+						break;
+				}
+			
+				// Remove a few characters that we use in URIs
+				$transaction['type_csv']     = str_replace('/', ' ', $transaction['type_csv']);
+				$transaction['description']  = str_replace('/', ' ', $transaction['description']);
+				$transaction['type_csv']     = str_replace('.', '',  $transaction['type_csv']);
+				$transaction['description']  = str_replace('.', '',  $transaction['description']);
+			}
+			$new_transactions[] = $transaction;
+		}
+		
+		$this->create_transactions($new_transactions);
 		
 		echo '<b>'.__('From').':</b> '.date('d-m-Y', $this->from).'</li><li>';
 		echo '<b>'.__('To').':</b> '.date('d-m-Y', $this->to).'</li><li>';
@@ -214,11 +422,47 @@ class Model_Bankaccount_Importfile extends Sprig {
 		throw new Kohana_Exception ('Unknown date format: :date', array(':date' => $date));
 	}
 	
-	static function replace_firstpart_if_found ($description, $search, $replacewith)
+	/**
+	 * Get the date including the year
+	 * 
+	 * If the transaction is done on a friday, saturday or sunday the date
+	 * on the recite will differ from payment_date.
+	 *
+	 * @param  String  Date with format "dd.mm"
+	 * @return String  Date with format "dd.mm.YYYY"
+	 */
+	public static function getDateWithYear ($tmp, $unixtime_paymentdate)
+	{
+		// Adding year
+		if(
+			($tmp == '31.12' || $tmp == '30.12' || $tmp == '29.12') &&
+			date('m', $unixtime_paymentdate) == '01'
+		)
+		{
+			$tmp = $tmp.'.'.(date('Y', $unixtime_paymentdate)-1);
+		}
+		else
+		{
+			$tmp = $tmp.'.'.date('Y', $unixtime_paymentdate);
+		}
+		return $tmp;
+	}
+	
+	private static $type_pdf;
+	static function remove_firstpart_if_found_and_set_type_pdf ($description, $search, $type_pdf_if_matched)
 	{
 		if(substr($description, 0, strlen($search)) == $search)
 		{
-			$description = $replacewith.substr($description, strlen($search));
+			$description = substr($description, strlen($search));
+			Model_Bankaccount_Importfile::$type_pdf = $type_pdf_if_matched;
+		}
+		return $description;
+	}
+	static function replace_firstpart_if_found ($description, $search, $replace_with)
+	{
+		if(substr($description, 0, strlen($search)) == $search)
+		{
+			$description = $replace_with.substr($description, strlen($search));
 		}
 		return $description;
 	}
@@ -379,31 +623,36 @@ class Model_Bankaccount_Importfile extends Sprig {
 				$payment_date = Model_Bankaccount_Importfile::
 					convert_stringDate_to_intUnixtime ($td[3], date('Y', $accounts[$last_account]['accountoverview_end']));
 				
-				// Fix description to match CSV format
+				// Checking description for transaction type 
+				// If found, add to type_pdf and match format for CSV
 				$description = $td[0];
+				Model_Bankaccount_Importfile::$type_pdf = '';
 				$description = Model_Bankaccount_Importfile::
-					replace_firstpart_if_found($description, 'Varer ', 'VARER: '); // Varer => VARER:
+					remove_firstpart_if_found_and_set_type_pdf($description, 'Varer ', 'VARER'); // Varer => VARER:
 				$description = Model_Bankaccount_Importfile::
-					replace_firstpart_if_found($description, 'Lønn ', 'LØNN: '); // Lønn => LØNN:
+					remove_firstpart_if_found_and_set_type_pdf($description, 'Lønn ', 'LØNN'); // Lønn => LØNN:
 				$description = Model_Bankaccount_Importfile::
-					replace_firstpart_if_found($description, 'Minibank ', 'MINIBANK: '); // Minibank => MINIBANK:
+					remove_firstpart_if_found_and_set_type_pdf($description, 'Minibank ', 'MINIBANK'); // Minibank => MINIBANK:
 				$description = Model_Bankaccount_Importfile::
-					replace_firstpart_if_found($description, 'Avtalegiro ', 'AVTALEGIRO: '); // Avtalegiro => AVTALEGIRO:
+					remove_firstpart_if_found_and_set_type_pdf($description, 'Avtalegiro ', 'AVTALEGIRO'); // Avtalegiro => AVTALEGIRO:
 				$description = Model_Bankaccount_Importfile::
-					replace_firstpart_if_found($description, 'Overføring ', 'OVERFØRSEL: '); // Overføring => Overførsel:
+					remove_firstpart_if_found_and_set_type_pdf($description, 'Overføring ', 'OVERFØRSEL'); // Overføring => Overførsel:
 				$description = Model_Bankaccount_Importfile::
-					replace_firstpart_if_found($description, 'Valuta ', 'VALUTA: '); // Valuta => VALUTA:
+					remove_firstpart_if_found_and_set_type_pdf($description, 'Valuta ', 'VALUTA'); // Valuta => VALUTA:
 				if(substr($description, 0, 1) == '*' && is_numeric(substr($description, 1, 4))) // *1234 = VISA VARE
 				{
-					$description = 'VISA VARE: '.$description;
 				}
 				if($next_is_fee)
 				{
 					// 1 Kontohold => Kontohold
 					$description = str_replace('1 Kontohold', 'Kontohold', $description);
-					$description = 'GEBYR: '.$description;
+					Model_Bankaccount_Importfile::$type_pdf = 'GEBYR';
 				}
 				
+				if(Model_Bankaccount_Importfile::$type_pdf == 'VARER')
+				{
+					$description  = trim(substr($description, 5));
+				}
 				
 				$accounts[$last_account]['control_amount'] += $amount;
 				$accounts[$last_account]['transactions'][] = array(
@@ -412,6 +661,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 						'intrest_date'    => $intrest_date,
 						'amount'          => ($amount/100),
 						'payment_date'    => $payment_date,
+						'type_pdf'        => Model_Bankaccount_Importfile::$type_pdf,
 					);
 				/*
 				echo '<tr>';
