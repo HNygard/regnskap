@@ -101,7 +101,20 @@ class Controller_Import extends Controller_Template
 					echo __('Not jet imported');
 				}
 				echo '<ul><li>';
+				
+				echo '<table>';
+				try {
 					$importfile->importFromSRbank_CSVFile();
+				} catch (Validation_Exception $e) {
+					echo '</li><li style="color: red;">'.print_r($e->array->errors(), true);
+					throw $e;
+				} catch (Exception $e) {
+					echo '</li><li style="color: red;">'.
+						'FILE '.$e->getFile().'<br />'.
+						'LINE '.$e->getLine().'<br />'.
+						$e->getMessage();
+				}
+				echo '</table>';
 				echo '</li></ul>';
 				echo '</li>';
 			}
@@ -167,9 +180,13 @@ class Controller_Import extends Controller_Template
 			try {
 echo '<table>';
 				$importfile->importFromSRbank_PDFFile();
+			} catch (Validate_Exception $e) {
+				echo '</li><li style="color: red;">'.print_r($e, true).'<br /><b>Transactions: </b>';
 			} catch (Exception $e) {
-				echo '</li><li style="color: red;">'.$e->getMessage().'<br /><b>Transactions: </b>';
-				print_r($importfile->transactions);
+				echo '</li><li style="color: red;">'.
+					'FILE '.$e->getFile().'<br />'.
+					'LINE '.$e->getLine().'<br />'.
+					$e->getMessage();
 			}
 echo '</table>';
 			echo '</li></ul>';
