@@ -14,22 +14,6 @@ class Model_Bankaccount_Transaction extends Sprig {
 				'default'  => null,
 				'null'     => true,
 			)),
-			'payment_date' => new Sprig_Field_Timestamp(array(
-			)),
-			'intrest_date' => new Sprig_Field_Timestamp(array(
-			)),
-			'type_csv' => new Sprig_Field_Char(array(
-				'empty'    => true,
-				'default'  => null,
-				'null'     => false,
-			)),
-			'type_pdf' => new Sprig_Field_Char(array(
-				'empty'    => true,
-				'default'  => null,
-				'null'     => false,
-			)),
-			'description' => new Sprig_Field_Char(array(
-			)),
 			'amount' => new Sprig_Field_Float(array(
 			)),
 			'imported' => new Sprig_Field_Boolean(array(
@@ -39,20 +23,6 @@ class Model_Bankaccount_Transaction extends Sprig {
 			'imported_automatically' => new Sprig_Field_Boolean(array(
 				'editable'        => false,
 				'default'         => false,
-			)),
-			
-			
-			'srbank_type' => new Sprig_Field_Char(array(
-				'in_db'  => false,
-				'empty'  => true,
-			)),
-			'srbank_date' => new Sprig_Field_Timestamp(array(
-				'in_db'  => false,
-				'empty'  => true,
-			)),
-			'srbank_text' => new Sprig_Field_Char(array(
-				'in_db'  => false,
-				'empty'  => true,
 			)),
 			
 			'autoimport_account_id' => new Sprig_Field_Integer(array(
@@ -232,7 +202,7 @@ class Model_Bankaccount_Transaction extends Sprig {
 		return true;
 	}
 	
-	/*
+	/**
 	 * Gets type from type_pdf or type_csv or returns null
 	 * 
 	 * @return  string/null
@@ -245,5 +215,56 @@ class Model_Bankaccount_Transaction extends Sprig {
 			return $this->type_csv;
 		else
 			return null;
+	}
+	
+	/**
+	 * Get information about transaction
+	 *
+	 * @return array  Contains array of bankaccount_transaction_info
+	 */
+	public function getInfo()
+	{
+		$query = DB::select()->where('bankaccount_transaction_id', '=', $this->id);
+		return Sprig::factory('Bankaccount_Transaction_Info', array())->load($query, FALSE);
+	}
+	
+	/**
+	 * Update information about transaction.
+	 * Checks for duplicates and removes amount, date, bankaccount_id
+	 * 
+	 * @param array
+	 */
+	public function updateInfo($info)
+	{
+		// Unset info saved directly in transaction ($this)
+		unset($info['amount']);
+		unset($info['date']);
+		unset($info['bankaccount_id']);
+
+		// Checking against saved information
+		$info_db = $this->getInfo();
+		foreach($info_db as $i)
+		{
+			// ? Does info in database match updated info?
+			if(isset($info[$i->key]) && $info[$i->key] == $i->value) {
+				// -> Yes. Lets not save it
+				unset($info[$i->key]);
+			}
+		}
+		
+		// -> Every piece of info in $info is now unique
+		
+		foreach($info as $a => $i)
+		{
+			// Save info to database
+			$transaction = Sprig::factory('Bankaccount_Transaction_Info', 
+					array(
+						'bankaccount_transaction_id' => $this->id,
+						'key'    => $a,
+						'value'  => $i,
+					)
+				);
+			$transaction->create();
+		}
 	}
 }

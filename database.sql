@@ -135,3 +135,19 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
 
+
+
+
+
+
+
+
+CREATE TABLE  `regnskap`.`bankaccount_transactions_info` (
+`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`bankaccount_transaction_id` INT NOT NULL ,
+`key` VARCHAR( 255 ) NOT NULL ,
+`value` VARCHAR( 255 ) NOT NULL
+) ENGINE = MYISAM ;
+RENAME TABLE  `regnskap`.`bankaccount_transactions_info` TO  `regnskap`.`bankaccount_transaction_infos` ;
+ALTER TABLE  `bankaccount_transaction_infos` ENGINE = INNODB;
+

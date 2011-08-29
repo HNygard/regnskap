@@ -33,90 +33,61 @@ class Model_Bankaccount_Importfile extends Sprig {
 		
 		$this->from  = null;
 		$this->to    = null;
+		$already_found = array(); // date_amount = number of
 		foreach($transactions as $transaction_array)
 		{
-			$transaction_array['description'] = str_replace('ß', 'ø', $transaction_array['description']); // encoding fix
-			$transaction_array['description'] = str_replace('¿', 'ø', $transaction_array['description']); // encoding fix
+			if(isset($tranaction_array['srbank_csv_description']))
+			{
+				$transaction_array['srbank_csv_description'] = 
+					str_replace('ß', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
+				$transaction_array['srbank_csv_description'] = 
+					str_replace('¿', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
+			}
+			if(isset($transaction_array['srbank_pdf_description']))
+			{
+				$transaction_array['srbank_pdf_description'] = 
+					str_replace('ß', 'ø', $transaction_array['srbank_pdf_description']); // encoding fix
+				$transaction_array['srbank_pdf_description'] = 
+					str_replace('¿', 'ø', $transaction_array['srbank_pdf_description']); // encoding fix
+			}
 			
 			/*
 			 * We have a match if:
-			 * - Description is the same in lower case
 			 * - Date is the same
 			 * - Amount is the same
 			 * - bankaccount_id is the same
 			 */
 			
-			$selector = $transaction_array;
-			unset($selector['description']); // Not matching on description, doing it "manually"
-			unset($selector['type_csv']); // Checking "manually"
-			unset($selector['type_pdf']); // Checking "manually"
-			
-			$tmp = $transaction_array['description']; // Saving description
-			unset($transaction_array['description']); // Not matching on description, doing it "manually"
+			$selector = array(
+					'date'            => $transaction_array['date'],
+					'amount'          => $transaction_array['amount'],
+					'bankaccount_id'  => $transaction_array['bankaccount_id'],
+				);
 			
 			$transactions = Sprig::factory('bankaccount_transaction', $selector)->load(NULL, FALSE);
+			$this_id = $transaction_array['date'].'_'.$transaction_array['amount'];
 			
 			$no_match = true;
-			$type = '';
+			$matches_skipped_past = 0; // To support two transactions with the same amount and date
 			foreach($transactions as $transaction)
 			{
-				// Trying to match
-				$type = '';
-				if(!is_null($transaction->type_pdf))
-					$type = 'type_pdf';
-				if(!is_null($transaction->type_csv))
+				// Transactions are matching on date and amount because of $selector
+				if(isset($already_found[$this_id]) && $matches_skipped_past >= $already_found[$this_id])
 				{
-					if($type == '')
-						$type = 'type_csv';
-					else
-						$type .= ',type_csv';
-				}
-			
-				if(
-					mb_strtolower($tmp) != mb_strtolower($transaction->description) ||
-					(
-						!is_null($transaction->getType()) &&
-						(
-							(
-								isset($transaction_array['type_pdf']) && 
-								$transaction_array['type_pdf'] != '' &&
-								$transaction_array['type_pdf'] != $transaction->getType()
-							) ||
-							(
-								isset($transaction_array['type_csv']) && 
-								$transaction_array['type_csv'] != '' &&
-								$transaction_array['type_csv'] != $transaction->getType()
-							)
-						)		
-					)
-				)
-				{
-					// Not matching
+					// Multiple transactions with the same date and amount
+					$matches_skipped_past++;
 				}
 				else
 				{
-					// Update?
-					$updates = array();
-					if(isset($transaction_array['type_csv']) &&
-						is_null($transaction->type_csv) && !is_null($transaction_array['type_csv']))
-						$updates['type_csv'] = $transaction_array['type_csv'];
-					if(isset($transaction_array['type_pdf']) &&
-						is_null($transaction->type_pdf) && !is_null($transaction_array['type_pdf']))
-						$updates['type_pdf'] = $transaction_array['type_pdf'];
-					// Checking if this description has a higher amount of lower case characters
-					// => more lower case = better description. CSV puts most in upper case
-					// TODO: 
-				
-					if(count($updates))
-					{
-						// TODO: report back to 
-						$transaction->values($updates)->update();
-						echo 'update'.print_r($updates, true).'<br>';
-					}
+					if(!isset($already_found[$this_id]))
+						$already_found[$this_id] = 0;
+					$already_found[$this_id]++;
+					
+					$no_match = false; // match found
+					
 					$this->transactions_already_imported++;
 					//echo $transaction.' - '.__('Already in database');
 					
-					$no_match = false;
 					break;
 				}
 			}
@@ -124,25 +95,25 @@ class Model_Bankaccount_Importfile extends Sprig {
 			if($no_match)
 			{
 				// No match found
-				$transaction_array['description'] = $tmp;
 				$transaction = Sprig::factory('bankaccount_transaction', $transaction_array);
 				$transaction->create();
 				$this->transactions_new++;
 				
-				echo '<tr><td>'.$type.'</td><td>'.$tmp.'</td><td>'.
-					(mb_strtolower($tmp) == mb_strtolower($transaction->description)).
-					'</td><td>'.$transaction->description.'</td></tr>';
+				echo '<tr><td>'.print_r($transaction_array, true).'</td></tr>';
 			}
 			
+			// Add/update transaction_info to database
+			$transaction->updateInfo($transaction_array);
+			
 			if(is_null($this->from))
-				$this->from = $transaction->payment_date;
-			elseif($this->from > $transaction->payment_date)
-				$this->from = $transaction->payment_date; // Older transaction
+				$this->from = $transaction->date;
+			elseif($this->from > $transaction->date)
+				$this->from = $transaction->date; // Older transaction
 			
 			if(is_null($this->to))
-				$this->to = $transaction->payment_date;
-			elseif($this->to < $transaction->payment_date)
-				$this->to = $transaction->payment_date; // Newer transaction
+				$this->to = $transaction->date;
+			elseif($this->to < $transaction->date)
+				$this->to = $transaction->date; // Newer transaction
 		}
 	}
 	
@@ -168,7 +139,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 			{
 				if(utf8::clean($csv[2]) == '')
 				{
-					//echo __('One with no intrest date, not importing.');
+					//echo __('One with no interest date, not importing.');
 					//echo '<br />';
 					$this->transactions_not_imported++;
 					continue;
@@ -181,12 +152,14 @@ class Model_Bankaccount_Importfile extends Sprig {
 					$csv[2] = substr($csv[2], 0, 10); // 01.08.2008
 				
 				$this->transactions[] = array(
-						'bankaccount_id' => $this->bankaccount_id,
-						'payment_date'   => Model_Bankaccount_Importfile::
-						                    convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
-						'intrest_date'   => utf8::clean($csv[2]),
-						'description'    => utf8_encode($csv[1]),
-						'amount'         => str_replace(',', '.', utf8::clean($csv[3])),
+						'bankaccount_id'            => $this->bankaccount_id,
+						'date'                      => sb1helper::
+						                               convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
+						'amount'                    => str_replace(',', '.', utf8::clean($csv[3])),
+						'srbank_csv_payment_date'   => sb1helper::
+						                               convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
+						'srbank_csv_interest_date'  => utf8::clean($csv[2]),
+						'srbank_csv_description'    => utf8_encode($csv[1]),
 					);
 			}
 		}
@@ -234,19 +207,19 @@ class Model_Bankaccount_Importfile extends Sprig {
 			// UTTAK: Optional message
 		
 			// TODO: fix oppretting
-			$transaction['description'] = Model_Bankaccount_Importfile::
-				replace_firstpart_if_found ($transaction['description'], 'OPPRETTING - ', 'OPPRETTING: ');
-			$pos = strpos($transaction['description'], ':');
-			$original_description = $transaction['description'];
+			$transaction['srbank_csv_description'] = sb1helper::
+				replace_firstpart_if_found ($transaction['srbank_csv_description'], 'OPPRETTING - ', 'OPPRETTING: ');
+			$pos = strpos($transaction['srbank_csv_description'], ':');
+			$original_description = $transaction['srbank_csv_description'];
 			if($pos === false)
 			{
-				$transaction['type_csv'] = 'UNKNOWN';
+				$transaction['srbank_csv_type'] = 'UNKNOWN';
 			}
 			else
 			{
-				$transaction['type_csv']     = substr($original_description, 0, $pos);
-				$transaction['description']  = trim(substr($original_description, $pos+1));
-				switch($transaction['type_csv'])
+				$transaction['srbank_csv_type']     = substr($original_description, 0, $pos);
+				$transaction['srbank_csv_description']  = trim(substr($original_description, $pos+1));
+				switch($transaction['srbank_csv_type'])
 				{
 					case 'VARER':
 					case 'VAREKJØP':
@@ -256,9 +229,12 @@ class Model_Bankaccount_Importfile extends Sprig {
 						// Format:
 						// TYPE: 15.10 TEXT
 						$transaction['date']         = 
-							Model_Bankaccount_Importfile::
-							getDateWithYear(substr($transaction['description'], 0, 5), $transaction['payment_date']);
-						$transaction['description']  = trim(substr($transaction['description'], 5));
+							sb1helper::
+							getDateWithYear(
+								substr($transaction['srbank_csv_description'], 0, 5), 
+								$transaction['srbank_csv_payment_date']);
+						$transaction['srbank_csv_description']  = 
+							trim(substr($transaction['srbank_csv_description'], 5));
 						break;
 					case 'SKATT':
 					case 'NETTGIRO M/MELD. FORFALL I DAG':
@@ -271,16 +247,20 @@ class Model_Bankaccount_Importfile extends Sprig {
 					case 'TELEGIRO I DAG M/MELDING':
 						// Format:
 						// TYPE: TEXT Betalt: 15.10.09
-						$betalt_pos = strpos($transaction['description'], 'Betalt: ');
+						$betalt_pos = strpos($transaction['srbank_csv_description'], 'Betalt: ');
 						if($betalt_pos !== false) // Found "Betalt: "
 						{
-							$date_tmp = substr($transaction['description'], $betalt_pos+strlen('Betalt: '));
+							$date_tmp = substr(
+									$transaction['srbank_csv_description'], 
+									$betalt_pos+strlen('Betalt: ')
+								);
 							if(substr($date_tmp, 6) >= 90) // year 1990-1999
 								$date_tmp = substr($date_tmp, 0, 6).'19'.substr($date_tmp, 6);
 							else // year 2000-2099
 								$date_tmp = substr($date_tmp, 0, 6).'20'.substr($date_tmp, 6);
 							$transaction['date']         = $date_tmp;
-							$transaction['description']  = trim(substr($transaction['description'], 0, $betalt_pos));
+							$transaction['srbank_csv_description']  =
+								trim(substr($transaction['srbank_csv_description'], 0, $betalt_pos));
 						}
 						break;
 					case 'VISA VARE':
@@ -292,19 +272,19 @@ class Model_Bankaccount_Importfile extends Sprig {
 					
 						// Splitting: 1234567890000000 15.10 NOK 1234,00 Company AS
 						// To array: array('1234567890000000', '15.10', 'NOK', '1234,00', 'Company AS')
-						$parts = explode(' ', $transaction['description'], 5);
+						$parts = explode(' ', $transaction['srbank_csv_description'], 5);
 						if(count($parts) != 5) {
 							break;
 						}
 					
 						$transaction['date'] = 
-							Model_Bankaccount_Importfile::
-							getDateWithYear($parts[1], $transaction['payment_date']);
-						$transaction['description'] = $parts[4];
+							sb1helper::
+							getDateWithYear($parts[1], $transaction['srbank_csv_payment_date']);
+						$transaction['srbank_csv_description'] = $parts[4];
 						break;					
 					case 'UTTAK':
-						if($transaction['description'] == '')
-							$transaction['description'] = __('No withdrawal message');
+						if($transaction['srbank_csv_description'] == '')
+							$transaction['srbank_csv_description'] = __('No withdrawal message');
 					case 'LØNN':
 					case 'OVERFØRT TIL ANNEN KTO':
 					case 'OVERFØRSEL':
@@ -318,28 +298,32 @@ class Model_Bankaccount_Importfile extends Sprig {
 						break;
 					
 					case 'Fra':
-						$transaction['type_csv'] = null;
-						$transaction['description'] = $transaction['type_csv'].': '.$transaction['description'];
+						$transaction['srbank_csv_type'] = null;
+						$transaction['srbank_csv_description'] = 
+							$transaction['srbank_csv_type'].': '.$transaction['srbank_csv_description'];
 						break;
 					
 					default:
-						if($transaction['description'] == '')
-							$transaction['description'] = $transaction['type_csv'];
+						if($transaction['srbank_csv_description'] == '')
+							$transaction['srbank_csv_description'] = $transaction['srbank_csv_type'];
 						else
-							$transaction['description'] = $transaction['type_csv'].': '.$transaction['description'];
-						throw new Kohana_Exception('Unknown transaction type. type_csv: :type_csv, description: :description',
-							array(':type_csv' => $transaction['type_csv'], 
-								':description' => $transaction['description']));
-						$transaction['type_csv'] = 'UNKNOWN';
+							$transaction['srbank_csv_description'] = 
+								$transaction['srbank_csv_type'].': '.$transaction['srbank_csv_description'];
+						throw new Kohana_Exception('Unknown transaction type. '.
+							'srbank_csv_type: :srbank_csv_type, '.
+							'srbank_csv_description: :srbank_csv_description',
+							array(':srbank_csv_type' => $transaction['srbank_csv_type'], 
+								':srbank_csv_description' => $transaction['srbank_csv_description']));
+						$transaction['srbank_csv_type'] = 'UNKNOWN';
 						
 						break;
 				}
 			
 				// Remove a few characters that we use in URIs
-				$transaction['type_csv']     = str_replace('/', ' ', $transaction['type_csv']);
-				$transaction['description']  = str_replace('/', ' ', $transaction['description']);
-				$transaction['type_csv']     = str_replace('.', '',  $transaction['type_csv']);
-				$transaction['description']  = str_replace('.', '',  $transaction['description']);
+				$transaction['srbank_csv_type']         = str_replace('/', ' ', $transaction['srbank_csv_type']);
+				$transaction['srbank_csv_description']  = str_replace('/', ' ', $transaction['srbank_csv_description']);
+				$transaction['srbank_csv_type']         = str_replace('.', '',  $transaction['srbank_csv_type']);
+				$transaction['srbank_csv_description']  = str_replace('.', '',  $transaction['srbank_csv_description']);
 			}
 			$new_transactions[] = $transaction;
 		}
@@ -351,7 +335,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 		echo 
 			__('Imported').': '.$this->transactions_new.', '.
 			__('Already in database').': '.$this->transactions_already_imported.', '.
-			__('No intrest date (not imported)').': '.$this->transactions_not_imported;
+			__('No interest date (not imported)').': '.$this->transactions_not_imported;
 
 		
 		$this->last_imported = time();
@@ -369,6 +353,19 @@ class Model_Bankaccount_Importfile extends Sprig {
 		
 		foreach($statementparser->getAccounts() as $account)
 		{
+			foreach($account['transactions'] as $i => $a)
+			{
+				// Looping through transactions and renaming keys
+				$account['transactions'][$i] = array(
+						'bankaccount_id'  => $a['bankaccount_id'],
+						'amount'          => $a['amount'],
+						'date'            => $a['payment_date'], // The most accurate date
+						'srbank_pdf_description'   => $a['description'],
+						'srbank_pdf_intrest_date'  => $a['intrest_date'],
+						'srbank_pdf_payment_date'  => $a['payment_date'],
+						'srbank_pdf_type'          => $a['type'],
+					);
+			}
 			$this->create_transactions($account['transactions']);
 			
 			echo '<li>';
@@ -378,7 +375,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 			echo 
 				__('Imported').': '.$this->transactions_new.', '.
 				__('Already in database').': '.$this->transactions_already_imported.', '.
-				__('No intrest date (not imported)').': '.$this->transactions_not_imported;
+				__('No interest date (not imported)').': '.$this->transactions_not_imported;
 			echo '</li>';
 			
 			// Debugging:

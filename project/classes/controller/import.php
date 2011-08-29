@@ -1,5 +1,7 @@
 <?php
 
+set_time_limit(0);
+
 function csv_to_array($array)
 {
 	$csv_array = array();
