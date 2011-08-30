@@ -3,9 +3,9 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Apr 30, 2011 at 10:44 AM
+-- Generation Time: Aug 29, 2011 at 11:44 PM
 -- Server version: 5.1.54
--- PHP Version: 5.3.5-1ubuntu7
+-- PHP Version: 5.3.5-1ubuntu7.2
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
@@ -84,12 +84,24 @@ CREATE TABLE IF NOT EXISTS `bankaccount_importfiles` (
 CREATE TABLE IF NOT EXISTS `bankaccount_transactions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `bankaccount_id` int(11) NOT NULL,
-  `payment_date` int(11) NOT NULL,
-  `intrest_date` int(11) DEFAULT NULL,
-  `description` varchar(255) NOT NULL,
+  `date` int(11) DEFAULT NULL,
   `amount` double NOT NULL,
   `imported` tinyint(1) NOT NULL,
   `imported_automatically` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bankaccount_transaction_infos`
+--
+
+CREATE TABLE IF NOT EXISTS `bankaccount_transaction_infos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `bankaccount_transaction_id` int(11) NOT NULL,
+  `key` varchar(255) NOT NULL,
+  `value` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
 
@@ -134,20 +146,4 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   `imported_automatically` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
-
-
-
-
-
-
-
-
-CREATE TABLE  `regnskap`.`bankaccount_transactions_info` (
-`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-`bankaccount_transaction_id` INT NOT NULL ,
-`key` VARCHAR( 255 ) NOT NULL ,
-`value` VARCHAR( 255 ) NOT NULL
-) ENGINE = MYISAM ;
-RENAME TABLE  `regnskap`.`bankaccount_transactions_info` TO  `regnskap`.`bankaccount_transaction_infos` ;
-ALTER TABLE  `bankaccount_transaction_infos` ENGINE = INNODB;
 
