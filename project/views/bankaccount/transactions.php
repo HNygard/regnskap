@@ -100,24 +100,23 @@ echo
 	'		<th>'.HTML::anchor(order_by_link('id', $link, $order_by, $order_desc, $order_desc2), __('Id')).'</th>'.chr(10).
 	'		<th>'.HTML::anchor(order_by_link('payment_date', $link, $order_by, $order_desc, $order_desc2), __('Date')).'</th>'.chr(10).
 	'		<th>'.HTML::anchor(order_by_link('amount', $link, $order_by, $order_desc, $order_desc2), __('Amount')).'</th>'.chr(10).
-	'		<th>'.__('Intrest date').'</th>'.chr(10).
-	'		<th style="border: solid gray 1px;">'.__('Type PDF').'</th>'.chr(10).
-	'		<th style="border: solid gray 1px;">'.__('Type CSV').'</th>'.chr(10).
-	'		<th style="border: solid gray 1px;">'.__('Text').'</th>'.chr(10).
+	'		<th>'.__('Data').'</th>'.chr(10).
 	'	</tr>'.chr(10);
 foreach($bankaccount_transactions as $bankaccount_transaction)
 {
 	echo
 		'	<tr id="transaction_'.$bankaccount_transaction->id.'">'.chr(10).
 		'		<td>'.$bankaccount_transaction->id.'</td>'.chr(10).
-		'		<td>'.date('d.m.Y', $bankaccount_transaction->date).'</td>'.chr(10).
+		'		<td class="time">'.date('d.m.Y', $bankaccount_transaction->date).'</td>'.chr(10).
 		'		<td style="text-align: right;">'.html::money($bankaccount_transaction->amount).'</td>'.chr(10).
 		'		<td style="display: none;" class="amount">'.$bankaccount_transaction->amount.'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->getInfoByKey('srbank_pdf_type').'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->getInfoByKey('srbank_csv_type').'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="time">'.
-		'		<td style="border: solid gray 1px;" class="text">'.$bankaccount_transaction->getInfoByKey('srbank_pdf_description').'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="text">'.$bankaccount_transaction->getInfoByKey('srbank_csv_description').'</td>'.chr(10).
+		'		<td style="border: solid gray 1px;" class="type">';
+	$tmp = array(); // Make nice output
+	foreach($bankaccount_transaction->getInfo() as $info) {
+		$tmp[] = $info->key.'='.$info->value;
+	}
+	echo implode($tmp, '<br />');
+	echo '</td>'.chr(10).
 		'		<td class="button">';
 	if($bankaccount_transaction->canAutoimport())
 	{
