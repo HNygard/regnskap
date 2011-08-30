@@ -91,8 +91,8 @@ foreach($months as $month => $this_month)
 	// $motnhs[$month] += $this_month;
 	$query = DB::select(array(DB::expr('SUM(amount)'), 'SUM'))->from('bankaccount_transactions');
 	$query->where('imported', '=', false);
-	$query->where('payment_date', '>=', mktime(0,0,0,substr($month,4,2),01,substr($month,0,4)));
-	$query->where('payment_date', '<', mktime(0,0,0,substr($month,4,2)+1,01,substr($month,0,4)));
+	$query->where('date', '>=', mktime(0,0,0,substr($month,4,2),01,substr($month,0,4)));
+	$query->where('date', '<', mktime(0,0,0,substr($month,4,2)+1,01,substr($month,0,4)));
 	$result = $query->execute();
 	foreach($result as $this_month)
 	{

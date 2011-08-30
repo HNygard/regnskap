@@ -38,31 +38,13 @@ class Model_Bankaccount_Transaction extends Sprig {
 	}
 	
 	/**
-	 * Analyse a transaction from SR-bank
-	 *
-	 * Sets srbank_type, srbank_date and srbank_text
-	 */
-	public function analyse_srbank()
-	{
-		$this->loadedOrThrowException();
-		
-		if(!is_null($this->type_csv))
-			$this->srbank_type = $this->type_csv;
-		elseif(!is_null($this->type_pdf))
-			$this->srbank_type = $this->type_pdf;
-		else
-			$this->srbank_type = null;
-		$this->srbank_date = $this->date;
-		$this->srbank_text = $this->description;
-	}
-	
-	/**
 	 * Can this bank transaction be automatically imported?
 	 * 
 	 * @return  boolean
 	 */
 	public function canAutoimport()
 	{
+		return false; // Not working as of 2011-08-29 23:46:09
 		if(!isset($this->srbank_text))
 			return false;
 		if(!isset($this->srbank_type))
@@ -171,7 +153,7 @@ class Model_Bankaccount_Transaction extends Sprig {
 			return false;
 		
 		// Analyse this SR-bank transaction
-		$this->analyse_srbank();
+		//$this->analyse_srbank();
 		
 		// Can it be automatically imported?
 		if(!$this->canAutoimport())
@@ -180,10 +162,7 @@ class Model_Bankaccount_Transaction extends Sprig {
 		}
 		
 		// Creating
-		if(!is_null($this->srbank_date))
-			$time = $this->srbank_date;
-		else
-			$time = $this->payment_date;
+		$time = $this->date;
 		
 		$transactions = Sprig::factory('transaction',
 			array(
@@ -266,5 +245,20 @@ class Model_Bankaccount_Transaction extends Sprig {
 				);
 			$transaction->create();
 		}
+	}
+	
+	private $_infocache;
+	public function getInfoByKey($key)
+	{
+		
+		if(!isset($this->_infocache))
+			$this->_infocache = $this->getInfo();
+		foreach($this->_infocache as $ikey => $value)
+		{
+			if($ikey == $key) {
+				return $value;
+			}
+		}
+		return NULL;
 	}
 }

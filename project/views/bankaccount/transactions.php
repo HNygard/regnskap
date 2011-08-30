@@ -98,37 +98,26 @@ echo '<table>'.chr(10);
 echo
 	'	<tr>'.chr(10).
 	'		<th>'.HTML::anchor(order_by_link('id', $link, $order_by, $order_desc, $order_desc2), __('Id')).'</th>'.chr(10).
-	'		<th>'.HTML::anchor(order_by_link('payment_date', $link, $order_by, $order_desc, $order_desc2), __('Payed date')).'</th>'.chr(10).
+	'		<th>'.HTML::anchor(order_by_link('payment_date', $link, $order_by, $order_desc, $order_desc2), __('Date')).'</th>'.chr(10).
 	'		<th>'.HTML::anchor(order_by_link('amount', $link, $order_by, $order_desc, $order_desc2), __('Amount')).'</th>'.chr(10).
-	'		<th>'.HTML::anchor(order_by_link('description', $link, $order_by, $order_desc, $order_desc2), __('Description')).'</th>'.chr(10).
 	'		<th>'.__('Intrest date').'</th>'.chr(10).
-	'		<th style="border: solid gray 1px;">'.__('Type').'</th>'.chr(10).
 	'		<th style="border: solid gray 1px;">'.__('Type PDF').'</th>'.chr(10).
 	'		<th style="border: solid gray 1px;">'.__('Type CSV').'</th>'.chr(10).
-	'		<th style="border: solid gray 1px;">'.__('Date').'</th>'.chr(10).
 	'		<th style="border: solid gray 1px;">'.__('Text').'</th>'.chr(10).
 	'	</tr>'.chr(10);
 foreach($bankaccount_transactions as $bankaccount_transaction)
 {
-	$bankaccount_transaction->analyse_srbank();
 	echo
 		'	<tr id="transaction_'.$bankaccount_transaction->id.'">'.chr(10).
 		'		<td>'.$bankaccount_transaction->id.'</td>'.chr(10).
-		'		<td>'.date('d.m.Y', $bankaccount_transaction->payment_date).'</td>'.chr(10).
+		'		<td>'.date('d.m.Y', $bankaccount_transaction->date).'</td>'.chr(10).
 		'		<td style="text-align: right;">'.html::money($bankaccount_transaction->amount).'</td>'.chr(10).
 		'		<td style="display: none;" class="amount">'.$bankaccount_transaction->amount.'</td>'.chr(10).
-		'		<td>'.$bankaccount_transaction->description.'</td>'.chr(10).
-		'		<td>'.date('d.m.Y', $bankaccount_transaction->intrest_date).'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->srbank_type.'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->type_pdf.'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->type_csv.'</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="time">';
-	if(!is_null($bankaccount_transaction->srbank_date))
-		echo date('d.m.Y', $bankaccount_transaction->srbank_date);
-	else
-		echo date('d.m.Y', $bankaccount_transaction->payment_date);
-	echo '</td>'.chr(10).
-		'		<td style="border: solid gray 1px;" class="text">'.$bankaccount_transaction->srbank_text.'</td>'.chr(10).
+		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->getInfoByKey('srbank_pdf_type').'</td>'.chr(10).
+		'		<td style="border: solid gray 1px;" class="type">'.$bankaccount_transaction->getInfoByKey('srbank_csv_type').'</td>'.chr(10).
+		'		<td style="border: solid gray 1px;" class="time">'.
+		'		<td style="border: solid gray 1px;" class="text">'.$bankaccount_transaction->getInfoByKey('srbank_pdf_description').'</td>'.chr(10).
+		'		<td style="border: solid gray 1px;" class="text">'.$bankaccount_transaction->getInfoByKey('srbank_csv_description').'</td>'.chr(10).
 		'		<td class="button">';
 	if($bankaccount_transaction->canAutoimport())
 	{

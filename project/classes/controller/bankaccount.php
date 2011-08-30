@@ -9,15 +9,14 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->bankaccounts = Sprig::factory('bankaccount', array())->load($query, FALSE);
 	}
 	
-	public function action_transactions ($bankaccount_id, $order_by = 'payment_date', $order_desc = 'desc')
+	public function action_transactions ($bankaccount_id, $order_by = 'date', $order_desc = 'desc')
 	{
 		if(
-			$order_by != 'payment_date' && 
+			$order_by != 'date' && 
 			$order_by != 'amount' && 
-			$order_by != 'id' &&
-			$order_by != 'description')
+			$order_by != 'id')
 		{
-			$order_by = 'payment_date';
+			$order_by = 'date';
 		}
 		if($order_desc != 'desc' && $order_desc != 'asc')
 		{
@@ -38,12 +37,11 @@ class Controller_Bankaccount extends Controller_Template
 	public function action_transactionsnotimported ($bankaccount_id, $order_by = 'payment_date', $order_desc = 'desc')
 	{
 		if(
-			$order_by != 'payment_date' && 
+			$order_by != 'date' && 
 			$order_by != 'amount' && 
-			$order_by != 'id' &&
-			$order_by != 'description')
+			$order_by != 'id')
 		{
-			$order_by = 'payment_date';
+			$order_by = 'date';
 		}
 		if($order_desc != 'desc' && $order_desc != 'asc')
 		{
@@ -62,7 +60,7 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->bankaccount = $bankaccount;
 	}
 	
-	public function action_transactionsnotimported_bymonth ($year, $month, $order_by = 'payment_date', $order_desc = 'desc')
+	public function action_transactionsnotimported_bymonth ($year, $month, $order_by = 'date', $order_desc = 'desc')
 	{
 		$year = (int)$year;
 		$month = (int)$month;
@@ -70,12 +68,11 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->month  = $month;
 		
 		if(
-			$order_by != 'payment_date' && 
+			$order_by != 'date' && 
 			$order_by != 'amount' && 
-			$order_by != 'id' &&
-			$order_by != 'description')
+			$order_by != 'id')
 		{
-			$order_by = 'payment_date';
+			$order_by = 'date';
 		}
 		if($order_desc != 'desc' && $order_desc != 'asc')
 		{
@@ -87,8 +84,8 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template2->title = __('Not imported transactions on all bank accounts').' '.$month.'.'.$year;
 		$query = DB::select()->order_by($order_by, $order_desc);
 		$query->where('imported', '=', false);
-		$query->where('payment_date', '>=', mktime(0,0,0,$month,01,$year));
-		$query->where('payment_date', '<', mktime(0,0,0,$month+1,01,$year));
+		$query->where('date', '>=', mktime(0,0,0,$month,01,$year));
+		$query->where('date', '<', mktime(0,0,0,$month+1,01,$year));
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
 		$query = DB::select()->order_by('num');
@@ -110,7 +107,7 @@ class Controller_Bankaccount extends Controller_Template
 		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
 		$this->template2->title = __('Autoimport transactions on bank account').' '.$bankaccount->num;
 		$query = DB::select()
-			->order_by('payment_date', 'DESC')
+			->order_by('date', 'DESC')
 			->where('imported', '=', false);
 		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
