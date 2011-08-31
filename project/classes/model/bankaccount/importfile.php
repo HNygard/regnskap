@@ -153,8 +153,6 @@ class Model_Bankaccount_Importfile extends Sprig {
 				
 				$this->transactions[] = array(
 						'bankaccount_id'            => $this->bankaccount_id,
-						'date'                      => sb1helper::
-						                               convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
 						'amount'                    => str_replace(',', '.', utf8::clean($csv[3])),
 						'srbank_csv_payment_date'   => sb1helper::
 						                               convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
@@ -258,7 +256,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 								$date_tmp = substr($date_tmp, 0, 6).'19'.substr($date_tmp, 6);
 							else // year 2000-2099
 								$date_tmp = substr($date_tmp, 0, 6).'20'.substr($date_tmp, 6);
-							$transaction['date']         = $date_tmp;
+							$transaction['srbank_csv_payment_date']         = $date_tmp;
 							$transaction['srbank_csv_description']  =
 								trim(substr($transaction['srbank_csv_description'], 0, $betalt_pos));
 						}
@@ -277,7 +275,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 							break;
 						}
 					
-						$transaction['date'] = 
+						$transaction['srbank_csv_payment_date'] = 
 							sb1helper::
 							getDateWithYear($parts[1], $transaction['srbank_csv_payment_date']);
 						$transaction['srbank_csv_description'] = $parts[4];
@@ -325,6 +323,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 				$transaction['srbank_csv_type']         = str_replace('.', '',  $transaction['srbank_csv_type']);
 				$transaction['srbank_csv_description']  = str_replace('.', '',  $transaction['srbank_csv_description']);
 			}
+			$transaction['date'] = $transaction['srbank_csv_payment_date'];
 			$new_transactions[] = $transaction;
 		}
 		
