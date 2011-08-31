@@ -338,7 +338,15 @@ class Model_Bankaccount_Importfile extends Sprig {
 				$transaction['srbank_csv_type']         = str_replace('.', '',  $transaction['srbank_csv_type']);
 				$transaction['srbank_csv_description']  = str_replace('.', '',  $transaction['srbank_csv_description']);
 			}
-			$transaction['date'] = $transaction['srbank_csv_payment_date'];
+			if($transaction['srbank_csv_type'] == 'VISA VARE') {
+				// The PDF equivalent of these CSV transactions of these types
+				// are not able to read the payment_date, use interest date instead
+				// for better matching
+				$transaction['date'] = $transaction['srbank_csv_interest_date'];
+			} 
+			else {
+				$transaction['date'] = $transaction['srbank_csv_payment_date'];
+			}
 			$new_transactions[] = $transaction;
 		}
 		
