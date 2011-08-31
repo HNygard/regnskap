@@ -3,9 +3,9 @@
 class Model_Bankaccount_Importfile extends Sprig {
 	
 	public $transactions = array();
-	private $transactions_new = 0;
-	private $transactions_not_imported = 0;
-	private $transactions_already_imported = 0;
+	public $transactions_new = 0;
+	public $transactions_not_imported = 0;
+	public $transactions_already_imported = 0;
 	
 	protected function _init()
 	{
@@ -25,7 +25,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 		);
 	}
 	
-	public function create_transactions ($transactions)
+	public function create_transactions ($transactions, $contains_all_transactions_in_period = false, $period_from = null, $period_to = null)
 	{
 		//$this->transactions_new = 0; // Nye
 		//$this->transactions_already_imported; // Allerede inne
@@ -115,6 +115,11 @@ class Model_Bankaccount_Importfile extends Sprig {
 			elseif($this->to < $transaction->date)
 				$this->to = $transaction->date; // Newer transaction
 		}
+		
+		if(!is_null($period_from))
+			$this->from = $period_from;
+		if(!is_null($period_to))
+			$this->to = $period_to;
 	}
 	
 	public function importFromSRbank_CSVFile()
@@ -327,7 +332,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 			$new_transactions[] = $transaction;
 		}
 		
-		$this->create_transactions($new_transactions);
+		$this->create_transactions($new_transactions, true);
 		
 		echo '<b>'.__('From').':</b> '.date('d-m-Y', $this->from).'</li><li>';
 		echo '<b>'.__('To').':</b> '.date('d-m-Y', $this->to).'</li><li>';
@@ -352,6 +357,19 @@ class Model_Bankaccount_Importfile extends Sprig {
 		
 		foreach($statementparser->getAccounts() as $account)
 		{
+			if($account['account_id'] == -1 && count($account['transactions'])) {
+				echo '<li>';
+				echo '<b>'.__('Bankaccount').':</b> '.$account['account_num'].', '.
+					__('From').': '.date('d-m-Y', $account['accountstatement_start']).', '.
+					__('To').': '.date('d-m-Y', $account['accountstatement_end']).'</li><li>';
+				if($account['account_id'] == -1) 
+					echo 'Nothing imported, unknown account';
+				else
+					echo 'Nothing to import. No transactions found.';
+				echo '</li>';
+				
+				continue;
+			}
 			foreach($account['transactions'] as $i => $a)
 			{
 				// Looping through transactions and renaming keys
@@ -365,31 +383,36 @@ class Model_Bankaccount_Importfile extends Sprig {
 						'srbank_pdf_type'          => $a['type'],
 					);
 			}
-			$this->create_transactions($account['transactions']);
+			$importfile = Sprig::factory('Bankaccount_Importfile', array(
+					'filepath' => $this->filepath,
+					'bankaccount_id' => $account['account_id'],
+				))->load();
+			$importfile->create_transactions(
+					$account['transactions'],
+					true, 
+					$account['accountstatement_start'], 
+					$account['accountstatement_end']
+				);
 			
 			echo '<li>';
 			echo '<b>'.__('Bankaccount').':</b> '.$account['account_num'].', '.
 				__('From').': '.date('d-m-Y', $account['accountstatement_start']).', '.
 				__('To').': '.date('d-m-Y', $account['accountstatement_end']).'</li><li>';
 			echo 
-				__('Imported').': '.$this->transactions_new.', '.
-				__('Already in database').': '.$this->transactions_already_imported.', '.
-				__('No interest date (not imported)').': '.$this->transactions_not_imported;
+				__('Imported').': '.$importfile->transactions_new.', '.
+				__('Already in database').': '.$importfile->transactions_already_imported.', '.
+				__('No interest date (not imported)').': '.$importfile->transactions_not_imported;
 			echo '</li>';
 			
-			// Debugging:
-			//echo '<tr><td><b>account_num:</b> '.$account['account_num'].'</td></tr>';
-			//echo '<tr><td colspan="5">'; print_r($account); echo '</td></tr>';
-			
-			/*
-			echo '<tr><td>accountstatement_num: '.$account['accountstatement_num'].'</td></tr>';
-			echo '<tr><td>accountstatement_start: '.$account['accountstatement_start'].'</td></tr>';
-			echo '<tr><td>accountstatement_end: '.$account['accountstatement_end'].'</td></tr>';
-			echo '<tr><td>account_type: '.$account['account_type'].'</td></tr>';
-			echo '<tr><td>accountstatement_balance_in: '.$account['accountstatement_balance_in'].'</td></tr>';
-			echo '<tr><td>accountstatement_balance_out: '; var_dump($account['accountstatement_balance_out']); echo '</td></tr>';
-			echo '<tr><td>control_amount: '; var_dump($account['control_amount']); echo '</td></tr>';
-			*/
+			try {
+				$importfile->last_imported = time();
+				if($importfile->loaded())
+					$importfile->update();
+				else
+					$importfile->create();
+			} catch (Validation_Exception $e) {
+				var_dump($e->array->errors());
+			}
 		}
 	}
 }
