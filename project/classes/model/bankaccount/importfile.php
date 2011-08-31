@@ -161,7 +161,8 @@ class Model_Bankaccount_Importfile extends Sprig {
 						'amount'                    => str_replace(',', '.', utf8::clean($csv[3])),
 						'srbank_csv_payment_date'   => sb1helper::
 						                               convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
-						'srbank_csv_interest_date'  => utf8::clean($csv[2]),
+						'srbank_csv_interest_date'  => sb1helper::
+						                               convert_stringDate_to_intUnixtime(utf8::clean($csv[2])),
 						'srbank_csv_description'    => utf8_encode($csv[1]),
 					);
 			}
@@ -233,9 +234,13 @@ class Model_Bankaccount_Importfile extends Sprig {
 						// TYPE: 15.10 TEXT
 						$transaction['date']         = 
 							sb1helper::
-							getDateWithYear(
-								substr($transaction['srbank_csv_description'], 0, 5), 
-								$transaction['srbank_csv_payment_date']);
+							convert_stringDate_to_intUnixtime(
+								sb1helper::
+								getDateWithYear(
+									substr($transaction['srbank_csv_description'], 0, 5), 
+									$transaction['srbank_csv_payment_date']
+								)
+							);
 						$transaction['srbank_csv_description']  = 
 							trim(substr($transaction['srbank_csv_description'], 5));
 						break;
@@ -261,7 +266,9 @@ class Model_Bankaccount_Importfile extends Sprig {
 								$date_tmp = substr($date_tmp, 0, 6).'19'.substr($date_tmp, 6);
 							else // year 2000-2099
 								$date_tmp = substr($date_tmp, 0, 6).'20'.substr($date_tmp, 6);
-							$transaction['srbank_csv_payment_date']         = $date_tmp;
+							$transaction['srbank_csv_payment_date']         = 
+										sb1helper::
+										convert_stringDate_to_intUnixtime($date_tmp);
 							$transaction['srbank_csv_description']  =
 								trim(substr($transaction['srbank_csv_description'], 0, $betalt_pos));
 						}
@@ -282,7 +289,10 @@ class Model_Bankaccount_Importfile extends Sprig {
 					
 						$transaction['srbank_csv_payment_date'] = 
 							sb1helper::
-							getDateWithYear($parts[1], $transaction['srbank_csv_payment_date']);
+							convert_stringDate_to_intUnixtime(
+								sb1helper::
+								getDateWithYear($parts[1], $transaction['srbank_csv_payment_date'])
+							);
 						$transaction['srbank_csv_description'] = $parts[4];
 						break;					
 					case 'UTTAK':
