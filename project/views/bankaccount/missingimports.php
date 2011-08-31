@@ -21,7 +21,7 @@ foreach($bankaccount_importfiles as $bankaccount_importfile)
 			'		<td>'.__('Missing').'</td>'.chr(10).
 			'	</tr>'.chr(10);
 	}
-	$last_to = $bankaccount_importfile->to;
+	$last_to = mktime(0,0,0,date('m', $bankaccount_importfile->to), date('d', $bankaccount_importfile->to)+1, date('Y', $bankaccount_importfile->to));
 	echo
 		'	<tr>'.chr(10).
 		'		<td>'.date('d-m-Y', $bankaccount_importfile->from).'</td>'.chr(10).
