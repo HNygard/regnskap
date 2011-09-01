@@ -36,20 +36,6 @@ class Model_Bankaccount_Importfile extends Sprig {
 		$already_found = array(); // date_amount = number of
 		foreach($transactions as $transaction_array)
 		{
-			if(isset($tranaction_array['srbank_csv_description']))
-			{
-				$transaction_array['srbank_csv_description'] = 
-					str_replace('ß', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
-				$transaction_array['srbank_csv_description'] = 
-					str_replace('¿', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
-			}
-			if(isset($transaction_array['srbank_pdf_description']))
-			{
-				$transaction_array['srbank_pdf_description'] = 
-					str_replace('ß', 'ø', $transaction_array['srbank_pdf_description']); // encoding fix
-				$transaction_array['srbank_pdf_description'] = 
-					str_replace('¿', 'ø', $transaction_array['srbank_pdf_description']); // encoding fix
-			}
 			
 			/*
 			 * We have a match if:
@@ -347,6 +333,15 @@ class Model_Bankaccount_Importfile extends Sprig {
 			else {
 				$transaction['date'] = $transaction['srbank_csv_payment_date'];
 			}
+			
+			if(isset($tranaction_array['srbank_csv_description']))
+			{
+				$transaction_array['srbank_csv_description'] = 
+					str_replace('ß', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
+				$transaction_array['srbank_csv_description'] = 
+					str_replace('¿', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
+			}
+			
 			$new_transactions[] = $transaction;
 		}
 		
@@ -400,6 +395,14 @@ class Model_Bankaccount_Importfile extends Sprig {
 						'srbank_pdf_payment_date'  => $a['payment_date'],
 						'srbank_pdf_type'          => $a['type'],
 					);
+				
+				if(isset($transaction_array['srbank_pdf_description']))
+				{
+					$transaction_array['srbank_pdf_description'] = 
+						str_replace('ß', 'ø', $transaction_array['srbank_pdf_description']); // encoding fix
+					$transaction_array['srbank_pdf_description'] = 
+						str_replace('¿', 'ø', $transaction_array['srbank_pdf_description']); // encoding fix
+				}
 			}
 			$importfile = Sprig::factory('Bankaccount_Importfile', array(
 					'filepath' => $this->filepath,
