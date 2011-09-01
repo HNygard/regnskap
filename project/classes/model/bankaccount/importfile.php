@@ -27,16 +27,38 @@ class Model_Bankaccount_Importfile extends Sprig {
 	
 	public function create_transactions ($transactions, $contains_all_transactions_in_period = false, $period_from = null, $period_to = null)
 	{
-		//$this->transactions_new = 0; // Nye
-		//$this->transactions_already_imported; // Allerede inne
-		//$this->transactions_not_imported; // 
+		$existing_transactions = array();
+		$existing_transactions2 = array();
+		
+		// :? Creating transactions for a period of time?
+		if(
+			$contains_all_transactions_in_period &&
+			!is_null($period_from) && !is_null($period_to)
+		)
+		{
+			// -> Yes, lets match against all existing transactions
+			$existing_transactions_query = DB::select('*')
+				->from('bankaccount_transactions')
+				->where('bankaccount_id', '=', $this->bankaccount_id)
+				->where('date', '>=', $period_from)
+				->where('date', '<=', $period_to)
+				->as_object('Model_Bankaccount_Transaction')->execute();
+			foreach($existing_transactions_query as $transaction) {
+				// Building array with: id=>$transaction
+				$existing_transactions[$transaction->id] = $transaction;
+			}
+		}
+		else {
+			// -> No, not given any period
+			$contains_all_transactions_in_period = false;
+		}
 		
 		$this->from  = null;
 		$this->to    = null;
 		$already_found = array(); // date_amount = number of
+		$transactions_no_match = array();
 		foreach($transactions as $transaction_array)
 		{
-			
 			/*
 			 * We have a match if:
 			 * - Date is the same
@@ -70,6 +92,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 					$already_found[$this_id]++;
 					
 					$no_match = false; // match found
+					unset($existing_transactions[$transaction->id]);
 					
 					$this->transactions_already_imported++;
 					//echo $transaction.' - '.__('Already in database');
@@ -81,6 +104,49 @@ class Model_Bankaccount_Importfile extends Sprig {
 			if($no_match)
 			{
 				// No match found
+				// -> Save it for later matching
+				$transactions_no_match[] = $transaction_array;
+			}
+			else
+			{
+				// Add/update transaction_info to database
+				$transaction->updateInfo($transaction_array);
+			
+				if(is_null($this->from))
+					$this->from = $transaction->date;
+				elseif($this->from > $transaction->date)
+					$this->from = $transaction->date; // Older transaction
+			
+				if(is_null($this->to))
+					$this->to = $transaction->date;
+				elseif($this->to < $transaction->date)
+					$this->to = $transaction->date; // Newer transaction
+			}
+		}
+		
+		foreach($transactions_no_match as $transaction_array)
+		{
+			$no_match = true;
+			foreach($existing_transactions as $transaction)
+			{
+				// :? Match with a margin of 4 days
+				if(
+					abs($transaction_array['date']-$transaction->date) < 4*24*60*60 &&
+					$transaction_array['amount'] == $transaction->amount // Same amount
+				)
+				{
+					$no_match = false; // match found
+					unset($existing_transactions[$transaction->id]);
+					
+					$this->transactions_already_imported++;
+					//echo $transaction.' - '.__('Already in database');
+					
+					break;
+				}
+			}
+			
+			if($no_match)
+			{
 				$transaction = Sprig::factory('bankaccount_transaction', $transaction_array);
 				$transaction->create();
 				$this->transactions_new++;
