@@ -1,4 +1,4 @@
 <?php
 
-$bymonth = true;
+$bydate = true;
 require 'transactions.php';

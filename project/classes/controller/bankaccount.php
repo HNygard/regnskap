@@ -34,6 +34,38 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->bankaccount = $bankaccount;
 	}
 	
+	public function action_transactions_bydate ($bankaccount_id, $from, $to, $order_by = 'date', $order_desc = 'desc')
+	{
+		$from  = (int)$from;
+		$to    = (int)$to;
+		
+		if(
+			$order_by != 'date' && 
+			$order_by != 'amount' && 
+			$order_by != 'id')
+		{
+			$order_by = 'date';
+		}
+		if($order_desc != 'desc' && $order_desc != 'asc')
+		{
+			$order_desc = 'desc';
+		}
+		$this->template->order_by    = $order_by;
+		$this->template->order_desc  = $order_desc;
+		
+		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
+		$this->template2->title = __('Transactions on bank account').' '.$bankaccount->num;
+		$query = DB::select()->order_by($order_by, $order_desc);
+		$query->where('bankaccount_id', '=', $bankaccount->id);
+		$query->where('date', '>=', $from);
+		$query->where('date', '<',  $to);
+		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
+		
+		$this->template->bankaccount  = $bankaccount;
+		$this->template->from         = $from;
+		$this->template->to           = $to;
+	}
+	
 	public function action_transactionsnotimported ($bankaccount_id, $order_by = 'payment_date', $order_desc = 'desc')
 	{
 		if(
@@ -100,6 +132,7 @@ class Controller_Bankaccount extends Controller_Template
 		$query = DB::select()->order_by('from');
 		$query->where('bankaccount_id', '=', $bankaccount->id);
 		$this->template->bankaccount_importfiles = Sprig::factory('bankaccount_importfile', array())->load($query, FALSE);
+		$this->template->bankaccount_id = $bankaccount_id;
 	}
 	
 	public function action_autoimport ($bankaccount_id)

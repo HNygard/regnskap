@@ -1,9 +1,11 @@
 <?php
 
+if(!isset($bymonth))
+	$bymonth = false;
 if(!isset($bydate))
 	$bydate = false;
 
-if(!$bydate)
+if(!$bymonth)
 {
 	echo html::anchor('index.php/bankaccount/', __('Back to bank account list')).'<br />';
 
@@ -78,20 +80,29 @@ function order_by_link($should_be, $link, $order_by, $order_desc, $order_desc2)
 		return $link.$should_be.'/'.$order_desc;
 }
 
-if(!$bydate)
+if($bydate)
 {
 	$link = 'index.php/'.
 		Request::current()->controller().'/'.
 		Request::current()->action().'/'.
-		$bankaccount->id.'/';
+		$bankaccount->id.'/'.
+		$from.'/'.
+		$to.'/';
 }
-else
+elseif($bymonth)
 {
 	$link = 'index.php/'.
 		Request::current()->controller().'/'.
 		Request::current()->action().'/'.
 		$year.'/'.
 		$month.'/';// TODO: not only for months
+}
+else
+{
+	$link = 'index.php/'.
+		Request::current()->controller().'/'.
+		Request::current()->action().'/'.
+		$bankaccount->id.'/';
 }
 
 echo '<table>'.chr(10);

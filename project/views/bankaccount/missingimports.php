@@ -27,6 +27,12 @@ foreach($bankaccount_importfiles as $bankaccount_importfile)
 		'		<td>'.date('d-m-Y', $bankaccount_importfile->from).'</td>'.chr(10).
 		'		<td>'.date('d-m-Y', $bankaccount_importfile->to).'</td>'.chr(10).
 		'		<td>'.$bankaccount_importfile->filepath.'</td>'.chr(10).
+		'		<td>'.
+					HTML::anchor('index.php/'.
+						Request::current()->controller().'/transactions_bydate/'.$bankaccount_id.'/'.
+						$bankaccount_importfile->from.'/'.$bankaccount_importfile->to.'/',
+						__('View transactions in this period')).
+				'</td>'.chr(10).
 		'	</tr>'.chr(10);
 }
 
