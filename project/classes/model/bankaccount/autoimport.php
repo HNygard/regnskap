@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class Model_Bankaccount_Autoimport extends Sprig {
+class Model_Bankaccount_Autoimport extends hasinfo {
 	
 	protected function _init()
 	{
@@ -11,10 +11,6 @@ class Model_Bankaccount_Autoimport extends Sprig {
 				'empty' => true,
 			)),
 			'account_id' => new Sprig_Field_Integer(array(
-			)),
-			'type' => new Sprig_Field_Char(array(
-			)),
-			'text' => new Sprig_Field_Char(array(
 			)),
 			
 			'amount_max' => new Sprig_Field_Float(array(
@@ -35,5 +31,19 @@ class Model_Bankaccount_Autoimport extends Sprig {
 				'empty' => true,
 			)),
 		);
+	}
+	
+	public function updateInfo($info)
+	{
+		// Unset info saved directly in object ($this)
+		unset($info['id']);
+		unset($info['bankaccount_id']);
+		unset($info['account_id']);
+		unset($info['amount_max']);
+		unset($info['amount_min']);
+		unset($info['time_max']);
+		unset($info['time_min']);
+		
+		parent::updateInfo($info);
 	}
 }

@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class Model_Bankaccount_Transaction extends Sprig {
+class Model_Bankaccount_Transaction extends hasinfo {
 	
 	protected function _init()
 	{
@@ -8,6 +8,7 @@ class Model_Bankaccount_Transaction extends Sprig {
 			'id' => new Sprig_Field_Auto(array(
 			)),
 			'bankaccount_id' => new Sprig_Field_Integer(array(
+				
 			)),
 			'date' => new Sprig_Field_Timestamp(array(
 				'empty'    => true,
@@ -196,69 +197,14 @@ class Model_Bankaccount_Transaction extends Sprig {
 			return null;
 	}
 	
-	/**
-	 * Get information about transaction
-	 *
-	 * @return array  Contains array of bankaccount_transaction_info
-	 */
-	public function getInfo()
-	{
-		$query = DB::select()->where('bankaccount_transaction_id', '=', $this->id);
-		return Sprig::factory('Bankaccount_Transaction_Info', array())->load($query, FALSE);
-	}
-	
-	/**
-	 * Update information about transaction.
-	 * Checks for duplicates and removes amount, date, bankaccount_id
-	 * 
-	 * @param array
-	 */
 	public function updateInfo($info)
 	{
-		// Unset info saved directly in transaction ($this)
+		// Unset info saved directly in object ($this)
+		unset($info['id']);
 		unset($info['amount']);
 		unset($info['date']);
 		unset($info['bankaccount_id']);
-
-		// Checking against saved information
-		$info_db = $this->getInfo();
-		foreach($info_db as $i)
-		{
-			// ? Does info in database match updated info?
-			if(isset($info[$i->key]) && $info[$i->key] == $i->value) {
-				// -> Yes. Lets not save it
-				unset($info[$i->key]);
-			}
-		}
 		
-		// -> Every piece of info in $info is now unique
-		
-		foreach($info as $a => $i)
-		{
-			// Save info to database
-			$transaction = Sprig::factory('Bankaccount_Transaction_Info', 
-					array(
-						'bankaccount_transaction_id' => $this->id,
-						'key'    => $a,
-						'value'  => $i,
-					)
-				);
-			$transaction->create();
-		}
-	}
-	
-	private $_infocache;
-	public function getInfoByKey($key)
-	{
-		
-		if(!isset($this->_infocache))
-			$this->_infocache = $this->getInfo();
-		foreach($this->_infocache as $ikey => $value)
-		{
-			if($ikey == $key) {
-				return $value;
-			}
-		}
-		return NULL;
+		parent::updateInfo($info);
 	}
 }
