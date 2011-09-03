@@ -123,8 +123,8 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 		'		<td style="display: none;" class="amount">'.$bankaccount_transaction->amount.'</td>'.chr(10).
 		'		<td style="border: solid gray 1px;" class="type">';
 	$tmp = array(); // Make nice output
-	foreach($bankaccount_transaction->getInfo() as $info) {
-		$tmp[] = $info->key.'='.$info->value;
+	foreach($bankaccount_transaction->getInfo() as $key => $value) {
+		$tmp[] = $key.'='.$value;
 	}
 	echo implode($tmp, '<br />');
 	echo '</td>'.chr(10).

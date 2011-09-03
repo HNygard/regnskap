@@ -2,16 +2,37 @@
 
 abstract class hasinfo extends Sprig
 {
-
+	private $_infocache;
+	
 	/**
 	 * Get information about transaction
 	 *
-	 * @return array  Contains array of bankaccount_transaction_info
+	 * @return array  Contains array of key=>value
 	 */
 	public function getInfo()
 	{
-		$query = DB::select()->where(strtolower($this->_model).'_id', '=', $this->id);
-		return Sprig::factory(ucfirst($this->_model).'_Info', array())->load($query, FALSE);
+		if(!isset($this->_infocache))
+		{
+			$this->_infocache = array();
+			$query = DB::select()
+				->from(strtolower($this->_model).'_infos')
+				->where(strtolower($this->_model).'_id', '=', $this->id)
+				->execute();
+			foreach($query as $row)
+			{
+				$this->_infocache[$row['key']] = $row['value'];
+				if($row['key'] == 'srbank_csv_description' || $row['key'] == 'srbank_pdf_description')
+					$this->_infocache['srbank_description'] = $row['value'];
+				if(
+					($row['key'] == 'srbank_csv_type' || $row['key'] == 'srbank_pdf_type') &&
+					$row['value'] != ''
+				)
+					$this->_infocache['srbank_type'] = $row['value'];
+			}
+			//$this->_infocache = Sprig::factory(ucfirst($this->_model).'_Info', array())->load($query, FALSE);
+		}
+		
+		return $this->_infocache;
 	}
 	
 	/**
@@ -24,12 +45,20 @@ abstract class hasinfo extends Sprig
 	{
 		// Checking against saved information
 		$info_db = $this->getInfo();
-		foreach($info_db as $i)
+		foreach($info_db as $key => $value)
 		{
 			// ? Does info in database match updated info?
-			if(isset($info[$i->key]) && $info[$i->key] == $i->value) {
+			if(isset($info[$key]) && $info[$key] == $value) {
 				// -> Yes. Lets not save it
-				unset($info[$i->key]);
+				unset($info[$key]);
+			}
+			elseif(isset($info[$key])) {
+				// -> Does not match on value, but has the same key
+				
+				// Let give it a new random key
+				$tmp_value = $info[$key];
+				unset($info[$key]);
+				$info[$key.time().rand(0,20)] = $tmp_value;
 			}
 		}
 		
@@ -45,18 +74,13 @@ abstract class hasinfo extends Sprig
 						'value'  => $i,
 					)
 				);
-			echo 'New: '.$a.'='.$i.'<br>'.chr(10);
 			$transaction->create();
 		}
 	}
 	
-	private $_infocache;
 	public function getInfoByKey($key)
 	{
-		
-		if(!isset($this->_infocache))
-			$this->_infocache = $this->getInfo();
-		foreach($this->_infocache as $ikey => $value)
+		foreach($this->getInfo() as $ikey => $value)
 		{
 			if($ikey == $key) {
 				return $value;
