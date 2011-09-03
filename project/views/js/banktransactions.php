@@ -14,25 +14,48 @@ $(document).ready(function() {
 		autoimport_copy_time_min = $('#autoimport_copy_time_min'),
 		last_transaction_id = $('#last_transaction_id');
 	
-	$('.canNotAutoimport').click(function () {
-		// Getting id of the transaction and getting the values
-		var tr = $(this). // button
-			parent(). // td
-			parent(); // tr
+	$('.transaction').each(function () {
+		var transaction_id = $(this).attr('id').substr('transactions_'.length-1);
+		var get = $.get('/regnskap/regnskap/webroot/index.php/bankaccount/transaction_canautoimport/'+
+						transaction_id,
+					function(data)
+				{
+					if(jQuery.trim(data) != 'false') {
+						$('#transaction_'+transaction_id+' td.button'). // TODO: This might not be true!
+							html(data); // HTML delivered in response
+					} else {
+						$('#transaction_'+transaction_id+' td.button'). // TODO: This might not be true!
+							html('<button class="canNotAutoimport" '+
+								'class="ui-button ui-widget ui-state-default ui-corner-all '+
+								'ui-button-text-only ui-state-hover" role="button" '+
+								'aria-disabled="false"><span class="ui-button-text">+</span></button>'
+								//$('#autoimport_account_id :selected').text()
+							);
+						$('#transaction_'+transaction_id+' td.button .canNotAutoimport').click(function () {
+							// Getting id of the transaction and getting the values
+							var tr = $(this). // button
+								parent(). // td
+								parent(); // tr
 		
-		// Set the type and text field to the values from the transaction
-		autoimport_type.val($('.type', $(tr)).text());
-		autoimport_text.val($('.text', $(tr)).text());
+							// Set the type and text field to the values from the transaction
+							autoimport_type.val($('.type', $(tr)).text());
+							autoimport_text.val($('.text', $(tr)).text());
 		
-		// Copying some amount and time to a temp location
-		autoimport_copy_amount_max.text($('.amount', $(tr)).text());
-		autoimport_copy_amount_min.text($('.amount', $(tr)).text());
-		autoimport_copy_time_max.text($('.time', $(tr)).text());
-		autoimport_copy_time_min.text($('.time', $(tr)).text());
+							// Copying some amount and time to a temp location
+							autoimport_copy_amount_max.text($('.amount', $(tr)).text());
+							autoimport_copy_amount_min.text($('.amount', $(tr)).text());
+							autoimport_copy_time_max.text($('.time', $(tr)).text());
+							autoimport_copy_time_min.text($('.time', $(tr)).text());
 		
-		last_transaction_id.text(tr.attr('id'));
+							last_transaction_id.text(tr.attr('id'));
 		
-		$( "#dialog-form" ).dialog( "open" );
+							$( "#dialog-form" ).dialog( "open" );
+						});
+					}
+				})
+				.error(function() { 
+					//alert("Error"); 
+				});
 	});
 	
 	$('#autoimport_copy').click(function () {

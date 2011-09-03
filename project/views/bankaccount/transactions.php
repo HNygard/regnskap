@@ -116,7 +116,7 @@ echo
 foreach($bankaccount_transactions as $bankaccount_transaction)
 {
 	echo
-		'	<tr id="transaction_'.$bankaccount_transaction->id.'">'.chr(10).
+		'	<tr id="transaction_'.$bankaccount_transaction->id.'" class="transaction">'.chr(10).
 		'		<td>'.$bankaccount_transaction->id.'</td>'.chr(10).
 		'		<td class="time">'.date('d.m.Y', $bankaccount_transaction->date).'</td>'.chr(10).
 		'		<td style="text-align: right;">'.html::money($bankaccount_transaction->amount).'</td>'.chr(10).
@@ -129,18 +129,8 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 	echo implode($tmp, '<br />');
 	echo '</td>'.chr(10).
 		'		<td class="button">';
-	if($bankaccount_transaction->canAutoimport())
-	{
-		echo '<img src="'.URL::base().'/images/tick.png" class="canAutoimport">';
-		$account = Sprig::factory('account', 
-			array('id' => $bankaccount_transaction->autoimport_account_id))->load();
-		if($account->loaded())
-			echo ' - '.$account->name;
-	}
-	else
-	{
-		echo '<button class="canNotAutoimport" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover" role="button" aria-disabled="false"><span class="ui-button-text">+</span></button>';
-	}
+	echo __('Unknown');
+	
 	echo	'</td>'.chr(10).
 		'	</tr>'.chr(10);
 }

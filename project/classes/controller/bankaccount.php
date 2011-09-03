@@ -158,4 +158,19 @@ class Controller_Bankaccount extends Controller_Template
 		exit;
 	}
 	
+	public function action_transaction_canautoimport ($id)
+	{
+		$transaction = Sprig::factory('bankaccount_transaction', array('id' => $id))->loadOrThrowException();
+		if($transaction->canAutoImport()) {
+			echo '<img src="'.URL::base().'images/tick.png" class="canAutoimport">';
+			$account = Sprig::factory('account', 
+				array('id' => $transaction->autoimport_account_id))->load();
+			if($account->loaded())
+				echo ' - '.$account->name;
+		}
+		else {
+			echo 'false';
+		}
+		exit;
+	}
 }
