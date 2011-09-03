@@ -456,10 +456,10 @@ class Model_Bankaccount_Importfile extends Sprig {
 						'bankaccount_id'  => $a['bankaccount_id'],
 						'amount'          => $a['amount'],
 						'date'            => $a['payment_date'], // The most accurate date
-						'srbank_pdf_description'   => $a['description'],
-						'srbank_pdf_intrest_date'  => $a['intrest_date'],
-						'srbank_pdf_payment_date'  => $a['payment_date'],
-						'srbank_pdf_type'          => $a['type'],
+						'srbank_pdf_description'    => $a['description'],
+						'srbank_pdf_interest_date'  => $a['interest_date'],
+						'srbank_pdf_payment_date'   => $a['payment_date'],
+						'srbank_pdf_type'           => $a['type'],
 					);
 				
 				if(isset($transaction_array['srbank_pdf_description']))
