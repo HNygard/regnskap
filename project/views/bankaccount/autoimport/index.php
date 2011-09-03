@@ -9,8 +9,7 @@ echo
 	'		<th>'.__('Id').'</th>'.chr(10).
 	'		<th>'.__('Options').'</th>'.chr(10).
 	'		<th>'.__('Account name').'</th>'.chr(10).
-	'		<th>'.__('Type').'</th>'.chr(10).
-	'		<th>'.__('Text').'</th>'.chr(10).
+	'		<th>'.__('Data').'</th>'.chr(10).
 	'		<th>'.__('Bankaccount').'</th>'.chr(10).
 	'		<th>'.__('Amount maximum').'</th>'.chr(10).
 	'		<th>'.__('Amount minimum').'</th>'.chr(10).
@@ -46,8 +45,13 @@ foreach($bankaccount_autoimports as $bankaccount_autoimport)
 			
 			'<td>'.$account->name.'</td>'.
 			
-			'<td>'.$bankaccount_autoimport->type.'</td>'.
-			'<td>'.$bankaccount_autoimport->text.'</td>'.
+			'<td>';
+	$tmp = array(); // Make nice output
+	foreach($bankaccount_autoimport->getInfo() as $key => $value) {
+		$tmp[] = $key.'=<span class="value key_'.$key.'">'.$value.'</span>';
+	}
+	echo implode($tmp, '<br />');
+	echo '</td>'.
 			'<td>'.$bankaccount_num.'</td>'.
 			'<td>&nbsp;'.$bankaccount_autoimport->amount_max.'</td>'.
 			'<td>&nbsp;'.$bankaccount_autoimport->amount_min.'</td>'.
