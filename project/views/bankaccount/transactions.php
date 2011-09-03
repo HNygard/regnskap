@@ -27,35 +27,35 @@ $bankaccounts = Sprig::factory('bankaccount', array())->load($query, FALSE);
 
 echo '<div id="dialog-form" title="'.__('Create autoimport').'">
 	<span id="last_transaction_id" style="display: none;"></span>
-	<form>
-	<fieldset>
-		<label for="autoimport_account_id">'.__('Account').'</label><br />
+	<form id="autoimport_creater">
+	<fieldset><br />
 		<select name="autoimport_account_id" id="autoimport_account_id" class="text ui-widget-content ui-corner-all">'.chr(10);
 foreach($accounts as $account)
 	echo '			<option value="'.$account->id.'">'.$account->name.'</option>'.chr(10);
 
-echo '		</select><br />
-		<label for="autoimport_type">'.__('Type').'</label><br />
-		<input type="text" name="autoimport_type" id="autoimport_type" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<label for="autoimport_text">'.__('Text').'</label><br />
-		<input type="text" name="autoimport_text" id="autoimport_text" value="" class="text ui-widget-content ui-corner-all" /><br /><br />
-		<label for="autoimport_bankaccount_id">'.__('Only from this bankaccount?').'</label><br />
-		<input type="checkbox" name="autoimport_bankaccount_id" id="autoimport_bankaccount_id" value="" class="text ui-widget-content ui-corner-all">
-		<select name="autoimport_bankaccount_txt" id="autoimport_bankaccount_txt" class="text ui-widget-content ui-corner-all">'.chr(10);
+echo '		</select>
+		<label for="autoimport_account_id">'.__('Account').'</label><br />
+		
+		<div id="autoimport_dynfields">
+		</div>
+		
+		<input type="checkbox" name="autoimport_bankaccount_checkbox" id="autoimport_bankaccount_id" value="1" class="text ui-widget-content ui-corner-all">
+		<select name="autoimport_bankaccount_id" id="autoimport_bankaccount_txt" class="text ui-widget-content ui-corner-all">'.chr(10);
 foreach($bankaccounts as $bankaccount)
 	echo '			<option value="'.$bankaccount->id.'">'.$bankaccount->num.' ('.$bankaccount->type.')</option>'.chr(10);
 
-echo '		</select><br />
+echo '		</select>
+		<label for="autoimport_bankaccount_checkbox">'.__('Only from this bankaccount?').'</label><br />
 		
-		<label for="autoimport_bankaccount_id">'.__('Max amount').'</label><br />
-		<input type="text" name="autoimport_amount_max" id="autoimport_amount_max" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<label for="autoimport_bankaccount_id">'.__('Min amount').'</label><br />
-		<input type="text" name="autoimport_amount_min" id="autoimport_amount_min" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<label for="autoimport_bankaccount_id">'.__('Max time').'</label><br />
-		<input type="text" name="autoimport_time_max" id="autoimport_time_max" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<label for="autoimport_bankaccount_id">'.__('Min time').'</label><br />
-		<input type="text" name="autoimport_time_min" id="autoimport_time_min" value="" class="text ui-widget-content ui-corner-all" /><br />
-		<button id="autoimport_copy">'.__('Copy from current').'</button	><br />
+		<input type="text" name="autoimport_amount_max" id="autoimport_amount_max" value="" class="text ui-widget-content ui-corner-all" />
+		<label for="autoimport_amount_max">'.__('Max amount').'</label><br />
+		<input type="text" name="autoimport_amount_min" id="autoimport_amount_min" value="" class="text ui-widget-content ui-corner-all" />
+		<label for="autoimport_amount_min">'.__('Min amount').'</label><br />
+		<input type="text" name="autoimport_time_max" id="autoimport_time_max" value="" class="text ui-widget-content ui-corner-all" />
+		<label for="autoimport_time_max">'.__('Max time').'</label><br />
+		<input type="text" name="autoimport_time_min" id="autoimport_time_min" value="" class="text ui-widget-content ui-corner-all" />
+		<label for="autoimport_time_min">'.__('Min time').'</label><br />
+		<button id="autoimport_copy">'.__('Copy from current').'</button><br />
 	</fieldset>
 	</form>
 	<span style="display: none;" id="autoimport_copy_amount_max"></span>
@@ -105,6 +105,8 @@ else
 		$bankaccount->id.'/';
 }
 
+echo '<img src="/regnskap/regnskap/webroot/images/tick.png" id="tickloader">';
+
 echo '<table>'.chr(10);
 echo
 	'	<tr>'.chr(10).
@@ -123,8 +125,8 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 		'		<td style="display: none;" class="amount">'.$bankaccount_transaction->amount.'</td>'.chr(10).
 		'		<td style="border: solid gray 1px;" class="type">';
 	$tmp = array(); // Make nice output
-	foreach($bankaccount_transaction->getInfo() as $key => $value) {
-		$tmp[] = $key.'='.$value;
+	foreach($bankaccount_transaction->getInfoForDisplay() as $key => $value) {
+		$tmp[] = $key.'=<span class="value key_'.$key.'">'.$value.'</span>';
 	}
 	echo implode($tmp, '<br />');
 	echo '</td>'.chr(10).

@@ -1,8 +1,8 @@
 $(document).ready(function() {
-
+	
+	$('#tickloader').show().hide();
+	
 	var autoimport_account_id = $('#autoimport_account_id'),
-		autoimport_type = $('#autoimport_type'),
-		autoimport_text = $('#autoimport_text'),
 		autoimport_bankaccount_id = $('#autoimport_bankaccount_id'),
 		autoimport_amount_max = $('#autoimport_amount_max'),
 		autoimport_amount_min = $('#autoimport_amount_min'),
@@ -36,10 +36,6 @@ $(document).ready(function() {
 							var tr = $(this). // button
 								parent(). // td
 								parent(); // tr
-		
-							// Set the type and text field to the values from the transaction
-							autoimport_type.val($('.type', $(tr)).text());
-							autoimport_text.val($('.text', $(tr)).text());
 		
 							// Copying some amount and time to a temp location
 							autoimport_copy_amount_max.text($('.amount', $(tr)).text());
@@ -77,23 +73,23 @@ $(document).ready(function() {
 			"Create an autoimport": function() {
 				// index.php/bankaccount_autoimport/createjs/ACCOUNTID/TYPE/TEXT
 				$('#dialog-form').dialog( "close" );
-				
+
 				if(autoimport_bankaccount_id.attr('checked'))
-					var bankaccount_id_checkedvalue = autoimport_bankaccount_id.val();
+					var bankaccount_id_checkedvalue = $('#autoimport_bankaccount_txt').val();
 				else
 					var bankaccount_id_checkedvalue = '';
 				
+				post_data = {
+						autoimport_amount_max: autoimport_amount_max.val(),
+						autoimport_amount_min: autoimport_amount_min.val(),
+						autoimport_time_max: autoimport_time_max.val(),
+						autoimport_time_min: autoimport_time_min.val(),
+						autoimport_bankaccount_id: bankaccount_id_checkedvalue,
+					};
+				console.log(post_data);
+console.log($('#autoimport_creater').serialize());
 				var post = $.post('/regnskap/regnskap/webroot/index.php/bankaccount_autoimport/createjs/'+
-						autoimport_account_id.val(),
-					{
-						type: autoimport_type.val(),
-						text: autoimport_text.val(),
-						amount_max: autoimport_amount_max.val(),
-						amount_min: autoimport_amount_min.val(),
-						time_max: autoimport_time_max.val(),
-						time_min: autoimport_time_min.val(),
-						bankaccount_id: bankaccount_id_checkedvalue,
-					},
+						autoimport_account_id.val(), $('#autoimport_creater').serialize(),
 					function(data)
 				{
 					if(jQuery.trim(data) == 'ok') {
@@ -120,6 +116,25 @@ $(document).ready(function() {
 			autoimport_amount_min.val('');
 			autoimport_time_max.val('');
 			autoimport_time_min.val('');
+			
+			var fields = '';
+			var i = 0;
+			$('#'+last_transaction_id.text()+' td.type span.value').each(function() {
+				var key = $(this).attr('class').substr('value key_'.length);
+				var value = $(this).text();
+				console.log(key + '=' + value);
+				
+				fields +=
+					'<input type="text" name="autoimport_dynfields[' + key + ']" id="autoimport_text" ' +
+					'value="' + value + '" ' +
+					'class="text ui-widget-content ui-corner-all" />' +
+					'<label for="autoimport_dynfields[' + key + ']">' + key + '</label>' +
+					'<br />';
+				i++;
+			});
+			
+			// Add dynamic fields
+			$('#autoimport_dynfields').html(fields);
 		},
 	});
 	

@@ -5,7 +5,7 @@ class Controller_Bankaccount_Autoimport extends Controller_Template_Crud
 	public function action_index ()
 	{
 		$this->template2->title = __('Autoimports');
-		$query = DB::select()->order_by('text');
+		$query = DB::select();
 		$this->template->bankaccount_autoimports = Sprig::factory('bankaccount_autoimport', array())->load($query, FALSE);
 	}
 	
@@ -23,8 +23,6 @@ class Controller_Bankaccount_Autoimport extends Controller_Template_Crud
 	{
 		$data = array(
 			'account_id'      => (int)$account_id,
-			'type'            => null,
-			'text'            => null,
 			'amount_max'      => null,
 			'amount_min'      => null,
 			'time_max'        => null,
@@ -33,38 +31,44 @@ class Controller_Bankaccount_Autoimport extends Controller_Template_Crud
 		);
 		if(isset($_POST))
 		{
-			if(isset($_POST['type']) && $_POST['type'] != '')
+			if(isset($_POST['autoimport_amount_max']) && $_POST['autoimport_amount_max'] != '' && 
+				is_numeric($_POST['autoimport_amount_max']))
 			{
-				$data['type'] = $_POST['type'];
+				$data['amount_max'] = $_POST['autoimport_amount_max'];
 			}
-			if(isset($_POST['text']) && $_POST['text'] != '')
+			if(isset($_POST['autoimport_amount_min']) && $_POST['autoimport_amount_min'] != '' && 
+				is_numeric($_POST['autoimport_amount_min']))
 			{
-				$data['text'] = $_POST['text'];
+				$data['amount_min'] = $_POST['autoimport_amount_min'];
 			}
-			if(isset($_POST['amount_max']) && $_POST['amount_max'] != '' && is_numeric($_POST['amount_max']))
+			if(isset($_POST['autoimport_time_max']) && $_POST['autoimport_time_max'] != '')
 			{
-				$data['amount_max'] = $_POST['amount_max'];
+				$data['time_max'] = $_POST['autoimport_time_max'];
 			}
-			if(isset($_POST['amount_min']) && $_POST['amount_min'] != '' && is_numeric($_POST['amount_min']))
+			if(isset($_POST['autoimport_time_min']) && $_POST['autoimport_time_min'] != '')
 			{
-				$data['amount_min'] = $_POST['amount_min'];
+				$data['time_min'] = $_POST['autoimport_time_min'];
 			}
-			if(isset($_POST['time_max']) && $_POST['time_max'] != '')
+			if(
+				isset($_POST['autoimport_bankaccount_checkbox']) && $_POST['autoimport_bankaccount_checkbox'] == '1' &&
+				isset($_POST['autoimport_bankaccount_id']) && is_numeric($_POST['autoimport_bankaccount_id'])
+			)
 			{
-				$data['time_max'] = $_POST['time_max'];
+				$data['bankaccount_id'] = (int)$_POST['autoimport_bankaccount_id'];
 			}
-			if(isset($_POST['time_min']) && $_POST['time_min'] != '')
+			if(isset($_POST['autoimport_dynfields']) && is_array($_POST['autoimport_dynfields']))
 			{
-				$data['time_min'] = $_POST['time_min'];
-			}
-			if(isset($_POST['bankaccount_id']) && $_POST['bankaccount_id'] != '')
-			{
-				$data['bankaccount_id'] = (int)$_POST['bankaccount_id'];
+				foreach($_POST['autoimport_dynfields'] as $key => $value)
+				{
+					$data[$key] = $value;
+				}
 			}
 		}
 		try
 		{
-			$autoimport = Sprig::factory('bankaccount_autoimport', $data)->create();
+			$autoimport = Sprig::factory('bankaccount_autoimport', $data)
+				->create()
+				->updateInfo($data);
 		}
 		catch (Validation_Exception $e)
 		{
