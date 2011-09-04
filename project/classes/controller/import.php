@@ -35,6 +35,11 @@ class Controller_Import extends Controller_Template
 	
 	function action_srbank ()
 	{
+		$this->importfiles('srbank_csv', $this->srbank_main_folder);
+	}
+	
+	function importfiles ($import_type, $mainfolder)
+	{
 		//$Q = DB::query(Database::SELECT, "select * from `bankkontoer`")->execute();
 		$bankaccounts = Sprig::factory('bankaccount', array())->load(NULL, FALSE);
 	
@@ -56,7 +61,7 @@ class Controller_Import extends Controller_Template
 		$files_found = array();
 		foreach($bankaccounts as $bankaccount)
 		{
-			$folder = $this->srbank_main_folder.'/'.$bankaccount->num.'/';
+			$folder = $mainfolder.'/'.$bankaccount->num.'/';
 			$files_found[$bankaccount->id] = array();
 			echo '<li><b>'.$bankaccount->num.'</b><ul>';
 		
@@ -106,7 +111,10 @@ class Controller_Import extends Controller_Template
 				
 				echo '<table>';
 				try {
-					$importfile->importFromSRbank_CSVFile();
+					if($type == 'srbank_csv')
+						$importfile->importFromSRbank_CSVFile();
+					else
+						throw new Exception ('importtype not valid');
 				} catch (Validation_Exception $e) {
 					echo '</li><li style="color: red;">'.print_r($e->array->errors(), true);
 					throw $e;
