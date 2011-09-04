@@ -115,7 +115,9 @@ echo
 	'		<th>'.HTML::anchor(order_by_link('date', $link, $order_by, $order_desc, $order_desc2), __('Date')).'</th>'.chr(10).
 	'		<th>'.HTML::anchor(order_by_link('amount', $link, $order_by, $order_desc, $order_desc2), __('Amount')).'</th>'.chr(10).
 	'		<th>'.__('Data').'</th>'.chr(10).
+	'		<th>'.__('Autoimport').'</th>'.chr(10).
 	'		<th>'.__('After').'</th>'.chr(10).
+	'		<th>'.__('Imported').'</th>'.chr(10).
 	'	</tr>'.chr(10);
 foreach($bankaccount_transactions as $bankaccount_transaction)
 {
@@ -138,6 +140,7 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 	
 	echo	'</td>'.chr(10).
 		'		<td style="text-align: right;">'.html::money($sum_after).'</td>'.chr(10).
+		'		<td style="text-align: center;">'.($bankaccount_transaction->imported?'X':'-').'</td>'.chr(10).
 		'	</tr>'.chr(10);
 }
 echo '</table>'.chr(10);
