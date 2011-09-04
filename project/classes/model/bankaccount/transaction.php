@@ -50,16 +50,16 @@ class Model_Bankaccount_Transaction extends hasinfo {
 		$autoimports_errors = array();
 		foreach(autoimport::getAll() as $autoimport)
 		{
-			if($this->autoimport_debug)
-				$autoimports_errors[$autoimport->id] = array();
+			$autoimports_errors[$autoimport->id] = array();
 			if(
 				!is_null($autoimport->bankaccount_id) && 
 				$autoimport->bankaccount_id != $this->bankaccount_id
 			)
 			{
 				// Account spesific and wrong account
-				if(!$this->autoimport_debug)
-					break;
+				if(!$this->autoimport_debug) {
+					continue;
+				}
 				$autoimports_errors[$autoimport->id][] = 'bankaccount_id';
 			}
 			
@@ -69,8 +69,9 @@ class Model_Bankaccount_Transaction extends hasinfo {
 			)
 			{
 				// Over the limited amount
-				if(!$this->autoimport_debug)
-					break;
+				if(!$this->autoimport_debug) {
+					continue;
+				}
 				$autoimports_errors[$autoimport->id][] = 'amount_max';
 			}
 			
@@ -80,34 +81,35 @@ class Model_Bankaccount_Transaction extends hasinfo {
 			)
 			{
 				// Under the limited amount
-				if(!$this->autoimport_debug)
-					break;
+				if(!$this->autoimport_debug) {
+					continue;
+				}
 				$autoimports_errors[$autoimport->id][] = 'amount_min';
 			}
 			
-			$time = $this->date;
-			
 			if(
 				!is_null($autoimport->time_max) &&
-				$autoimport->time_max < $time
+				$autoimport->time_max < $this->date
 			)
 			{
 				// Over the limited date
-				if(!$this->autoimport_debug)
-					break;
+				if(!$this->autoimport_debug) {
+					continue;
+				}
 				$autoimports_errors[$autoimport->id]['time_max'] = 
-					array('is' => $time, 'max was' => $autoimport->time_max);
+					array('is' => $this->date, 'max was' => $autoimport->time_max);
 			}
 			if(
 				!is_null($autoimport->time_min) &&
-				$autoimport->time_min > $time
+				$autoimport->time_min > $this->date
 			)
 			{
 				// Under the limited date
-				if(!$this->autoimport_debug)
-					break;
+				if(!$this->autoimport_debug) {
+					continue;
+				}
 				$autoimports_errors[$autoimport->id]['time_min'] = 
-					array('is' => $time, 'min was' => $autoimport->time_min);
+					array('is' => $this->date, 'min was' => $autoimport->time_min);
 			}
 			
 			// Match on autoimport_info
@@ -119,23 +121,21 @@ class Model_Bankaccount_Transaction extends hasinfo {
 					!isset($this_info[$key]) ||
 					strtolower($value) != strtolower($this_info[$key])
 				) {
-					if($this->autoimport_debug)
+					if($this->autoimport_debug) {
 						$autoimports_errors[$autoimport->id][] = $key;
+					}
 					$keyvalue_match = false;
 					break;
 				}
 			}
 			
 			// FOUND A MATCH
-			if(
-				!$this->autoimport_debug && $keyvalue_match ||
-				$this->autoimport_debug && !count($autoimports_errors[$autoimport->id]))
+			if($keyvalue_match && !count($autoimports_errors[$autoimport->id]))
 			{
 				$this->autoimport_account_id = $autoimport->account_id;
 				$autoimports[$autoimport->id] = $autoimport;
 			}
 		}
-		
 		if(count($autoimports))
 		{
 			return true;
