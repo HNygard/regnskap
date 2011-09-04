@@ -177,8 +177,10 @@ class Model_Bankaccount_Transaction extends hasinfo {
 		
 		// Description hack
 		$info = $this->getInfo();
-		if(isset($info['srbank_description'])) {
+		if(isset($info['srbank_description'])) { // Common for CSV and PDF import from SRbank
 			$description = $info['srbank_description'];
+		} elseif(isset($info['csv_description'])) { // Generic description
+			$description = $info['csv_description'];
 		}
 		else {
 			$description = '';
