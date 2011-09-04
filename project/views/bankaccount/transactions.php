@@ -111,7 +111,7 @@ echo '<table>'.chr(10);
 echo
 	'	<tr>'.chr(10).
 	'		<th>'.HTML::anchor(order_by_link('id', $link, $order_by, $order_desc, $order_desc2), __('Id')).'</th>'.chr(10).
-	'		<th>'.HTML::anchor(order_by_link('payment_date', $link, $order_by, $order_desc, $order_desc2), __('Date')).'</th>'.chr(10).
+	'		<th>'.HTML::anchor(order_by_link('date', $link, $order_by, $order_desc, $order_desc2), __('Date')).'</th>'.chr(10).
 	'		<th>'.HTML::anchor(order_by_link('amount', $link, $order_by, $order_desc, $order_desc2), __('Amount')).'</th>'.chr(10).
 	'		<th>'.__('Data').'</th>'.chr(10).
 	'	</tr>'.chr(10);
