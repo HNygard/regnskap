@@ -16,6 +16,7 @@ class Controller_Import extends Controller_Template
 {
 	protected $srbank_main_folder = '../import/sr-bank';
 	protected $srbank_pdf_main_folder = '../import/sr-bank_pdf';
+	protected $generic_csv_main_folder = '../import/generic_csv';
 	
 	function action_index ()
 	{
@@ -24,7 +25,11 @@ class Controller_Import extends Controller_Template
 	
 	public function before()
 	{
-		if($this->request->action() == 'srbank' || $this->request->action() == 'srbank_pdf')
+		if(
+			$this->request->action() == 'srbank' || 
+			$this->request->action() == 'srbank_pdf' || 
+			$this->request->action() == 'generic_csv'
+		)
 		{
 			$this->use_template2 = false;
 			$this->template = 'import/index';
@@ -36,6 +41,11 @@ class Controller_Import extends Controller_Template
 	function action_srbank ()
 	{
 		$this->importfiles('srbank_csv', $this->srbank_main_folder);
+	}
+	
+	function action_generic_csv ()
+	{
+		$this->importfiles('generic_csv', $this->generic_csv_main_folder);
 	}
 	
 	function importfiles ($import_type, $mainfolder)
@@ -111,8 +121,10 @@ class Controller_Import extends Controller_Template
 				
 				echo '<table>';
 				try {
-					if($type == 'srbank_csv')
+					if($import_type == 'srbank_csv')
 						$importfile->importFromSRbank_CSVFile();
+					elseif($import_type == 'generic_csv')
+						$importfile->importFromGenericCSVFile();
 					else
 						throw new Exception ('importtype not valid');
 				} catch (Validation_Exception $e) {

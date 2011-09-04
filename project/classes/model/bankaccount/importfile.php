@@ -502,4 +502,65 @@ class Model_Bankaccount_Importfile extends Sprig {
 			}
 		}
 	}
+	
+	public function importFromGenericCSVFile()
+	{
+		if(!isset($this->filepath) || $this->filepath == '')
+		{
+			throw new Kohana_Exception('Filepath not set.');
+		}
+		
+		// Parser filer
+		$csv_array = csv_to_array(explode("\n", file_get_contents($this->filepath)));
+		
+		foreach($csv_array as $csv)
+		{
+			// Checking if this is the first line in the feil
+			if($csv[1] == 'Beskrivelse') // Contains column 'Beskrivelse'
+				continue;
+			
+			// Sjekker mot db
+			//TODO: Muligens noe behandling av dato og andre data
+			if(!empty($csv))
+			{
+				if(utf8::clean($csv[2]) == '')
+				{
+					//echo __('One with no interest date, not importing.');
+					//echo '<br />';
+					$this->transactions_not_imported++;
+					continue;
+				}
+				
+				if(strlen($csv[0]) > 10) // 01.08.2008-00:00:00
+					$csv[0] = substr($csv[0], 0, 10); // 01.08.2008
+				
+				if(strlen($csv[2]) > 10) // 01.08.2008-00:00:00
+					$csv[2] = substr($csv[2], 0, 10); // 01.08.2008
+				
+				$this->transactions[] = array(
+						'bankaccount_id'            => $this->bankaccount_id,
+						'date'                      => sb1helper::
+						                               convert_stringDate_to_intUnixtime(utf8::clean($csv[0])),
+						'csv_description'           => trim($csv[1]),
+						'amount'                    => str_replace(',', '.', utf8::clean($csv[2])),
+					);
+			}
+		}
+		
+		$this->create_transactions($this->transactions, true);
+		
+		echo '<b>'.__('From').':</b> '.date('d-m-Y', $this->from).'</li><li>';
+		echo '<b>'.__('To').':</b> '.date('d-m-Y', $this->to).'</li><li>';
+		echo 
+			__('Imported').': '.$this->transactions_new.', '.
+			__('Already in database').': '.$this->transactions_already_imported.', '.
+			__('No interest date (not imported)').': '.$this->transactions_not_imported;
+
+		
+		$this->last_imported = time();
+		if($this->loaded())
+			$this->update();
+		else
+			$this->create();
+	}
 }
