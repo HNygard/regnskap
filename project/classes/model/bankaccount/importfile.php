@@ -400,12 +400,12 @@ class Model_Bankaccount_Importfile extends Sprig {
 				$transaction['date'] = $transaction['srbank_csv_payment_date'];
 			}
 			
-			if(isset($tranaction_array['srbank_csv_description']))
+			if(isset($tranaction['srbank_csv_description']))
 			{
-				$transaction_array['srbank_csv_description'] = 
-					str_replace('ß', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
-				$transaction_array['srbank_csv_description'] = 
-					str_replace('¿', 'ø', $transaction_array['srbank_csv_description']); // encoding fix
+				$transaction['srbank_csv_description'] = 
+					str_replace('ß', 'ø', $transaction['srbank_csv_description']); // encoding fix
+				$transaction['srbank_csv_description'] = 
+					str_replace('¿', 'ø', $transaction['srbank_csv_description']); // encoding fix
 			}
 			
 			$new_transactions[] = $transaction;
