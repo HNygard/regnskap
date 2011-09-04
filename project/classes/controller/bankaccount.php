@@ -137,6 +137,7 @@ class Controller_Bankaccount extends Controller_Template
 	
 	public function action_autoimport ($bankaccount_id)
 	{
+		set_time_limit(0);
 		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
 		$this->template2->title = __('Autoimport transactions on bank account').' '.$bankaccount->num;
 		$query = DB::select()

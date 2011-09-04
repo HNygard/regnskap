@@ -175,19 +175,27 @@ class Model_Bankaccount_Transaction extends hasinfo {
 			return false;
 		}
 		
-		// Creating
-		$time = $this->date;
+		// Description hack
+		$info = $this->getInfo();
+		if(isset($info['srbank_description'])) {
+			$description = $info['srbank_description'];
+		}
+		else {
+			$description = '';
+		}
 		
+		// Creating
 		$transactions = Sprig::factory('transaction',
 			array(
 				'account_id'                  => $this->autoimport_account_id,
-				'description'                 => $this->description,
+				'description'                 => $description,
 				'amount'                      => $this->amount,
-				'time'                        => $time,
+				'time'                        => $this->date,
 				'bankaccount_transaction_id'  => $this->id,
 				'imported_automatically'      => true,
 			))->create();
 		
+		// Update bankaccount transaction
 		$this->imported = true;
 		$this->imported_automatically = true;
 		$this->update();
