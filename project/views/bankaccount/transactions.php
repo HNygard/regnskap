@@ -41,8 +41,8 @@ echo '		</select>
 		
 		<input type="checkbox" name="autoimport_bankaccount_checkbox" id="autoimport_bankaccount_id" value="1" class="text ui-widget-content ui-corner-all">
 		<select name="autoimport_bankaccount_id" id="autoimport_bankaccount_txt" class="text ui-widget-content ui-corner-all">'.chr(10);
-foreach($bankaccounts as $bankaccount)
-	echo '			<option value="'.$bankaccount->id.'">'.$bankaccount->num.' ('.$bankaccount->type.')</option>'.chr(10);
+foreach($bankaccounts as $bankaccount_tmp)
+	echo '			<option value="'.$bankaccount_tmp->id.'">'.$bankaccount_tmp->num.' ('.$bankaccount_tmp->type.')</option>'.chr(10);
 
 echo '		</select>
 		<label for="autoimport_bankaccount_checkbox">'.__('Only from this bankaccount?').'</label><br />
