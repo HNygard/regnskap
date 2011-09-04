@@ -6,4 +6,5 @@ th {
 
 td {
 	border: 1px solid black;
+	white-space: nowrap;
 }
