@@ -17,6 +17,10 @@ class Controller_Import extends Controller_Template
 	protected $srbank_main_folder = '../import/sr-bank';
 	protected $srbank_pdf_main_folder = '../import/sr-bank_pdf';
 	protected $generic_csv_main_folder = '../import/generic_csv';
+	protected $kolumbus_main_folder = '../import/kolumbus';
+	
+	protected $importfiles_recursive = false;
+	protected $importfiles_search_string;
 	
 	function action_index ()
 	{
@@ -28,7 +32,8 @@ class Controller_Import extends Controller_Template
 		if(
 			$this->request->action() == 'srbank' || 
 			$this->request->action() == 'srbank_pdf' || 
-			$this->request->action() == 'generic_csv'
+			$this->request->action() == 'generic_csv' || 
+			$this->request->action() == 'kolumbus'
 		)
 		{
 			$this->use_template2 = false;
@@ -48,15 +53,63 @@ class Controller_Import extends Controller_Template
 		$this->importfiles('generic_csv', $this->generic_csv_main_folder);
 	}
 	
+	function action_kolumbus ()
+	{
+		$search_string_kolumbus = 'Her finner du en oversikt med din registrerte saldo og de siste';
+		
+		$this->importfiles_recursive = true;
+		$this->importfiles_search_string = $search_string_kolumbus;
+		$this->importfiles ('kolumbus', $this->kolumbus_main_folder);
+	}
+	
 	function importfiles_readfolder ($bankaccount_id, $folder)
 	{
+		// Make sure $folder ends with /
+		if(substr($folder, -1, 1) != '/') {
+			$folder .= '/';
+		}
+		
 		$handle = opendir($folder);
+		
 		while (false !== ($file = readdir($handle)))
 		{
-			if($file != '..' && $file != '.')
-			{
-				echo '<li>'.$folder.$file.'</li>';
-				$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
+			if($file == '..' || $file == '.') {
+				continue;
+			}
+			
+			// :? $fils is directory?
+			if(is_dir($folder.$file)) {
+				// -> $file is directory
+				
+				// :? Going through subdirectories of $folder?
+				if($this->importfiles_recursive) {
+					// -> Yes, lets read the subdirectory also
+					$this->importfiles_readfolder($bankaccount_id, $folder.$file);
+				} else {
+					// -> No reading of subdirectories
+					// Ignore
+					continue;
+				}
+			}
+			else {
+				// -> $file is not a directory
+				
+				// :? Are we searching for strings in the file?
+				if(isset($this->importfiles_search_string)) {
+					// -> File must contain $this->importfiles_search_string
+					
+					// :? Search
+					if(strpos(file_get_contents($folder.$file), $this->importfiles_search_string) !== FALSE)
+					{
+						// -> String found in file
+						echo '<li>'.$folder.$file.'</li>';
+						$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
+					}
+				}
+				else {
+					echo '<li>'.$folder.$file.'</li>';
+					$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
+				}
 			}
 		}
 	}
@@ -134,6 +187,8 @@ class Controller_Import extends Controller_Template
 						$importfile->importFromSRbank_CSVFile();
 					elseif($import_type == 'generic_csv')
 						$importfile->importFromGenericCSVFile();
+					elseif($import_type == 'kolumbus')
+						$importfile->importFromKolumbusReisekonto();
 					else
 						throw new Exception ('importtype not valid');
 				} catch (Validation_Exception $e) {

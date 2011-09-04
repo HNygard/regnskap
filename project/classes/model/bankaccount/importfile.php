@@ -563,4 +563,190 @@ class Model_Bankaccount_Importfile extends Sprig {
 		else
 			$this->create();
 	}
+	public function print_tree ($item, $spaces)
+	{
+		if($item->nodeName == '#text') {
+			$name = $item->nodeName;
+			$content = $item->textContent.'<br>';
+		}
+		else {
+			$name = $item->nodeName;
+			$content = '';
+		}
+		
+		echo $spaces.'&lt;'.$name.'&gt;<br>'.$content;
+		if($item->hasChildNodes()) {
+			foreach($item->childNodes as $item2)
+			{
+				$this->print_tree($item2, $spaces.' &nbsp;'.' &nbsp;'.' &nbsp;');
+			}
+		}
+		echo $spaces.'&lt;/'.$name.'&gt;<br>';
+	}
+	public function importFromKolumbusReisekonto()
+	{
+		if(!isset($this->filepath) || $this->filepath == '')
+		{
+			throw new Kohana_Exception('Filepath not set.');
+		}
+		
+		// Read file
+		$dom = new DOMDocument();
+		$dom->loadHTMLFile($this->filepath);
+		$treeContainingData =
+			$dom->getElementsByTagName('form')
+			->item(0) // <form name="travelAccountForm" (...)
+			->childNodes->item(1) // <table width="100%" (...)
+			->childNodes->item(0) // <tbody>
+			->childNodes->item(0) // <tr>
+			->childNodes->item(0) // <td>
+			;
+		
+		/*
+		$this->print_tree(
+			$treeContainingData
+			,'');*/
+		
+		/*
+		$treeContainingData has
+			- text node first (empty)
+			- <table>
+				- This table contains some text strings with data
+				- Can use regex
+					SALDO: 123,45
+					(Sist oppdatert DD.MM.YYYY kl. HH:MM)
+			- <table><tbody>
+				- First <tr> is info
+				- Second <tr> contains headings for each column
+				- Next table rows contains the real data until a row containing
+				  "Søket viser de nyeste bevegelsene. Skriv inn dato her for eldre transaksjoner."
+		 */
+		$first_table =
+			str_replace("\t", '', // Remove tabs
+			str_replace("\r", '',
+			str_replace("\n", ' ', // Fix line endings
+				$treeContainingData
+				->childNodes->item(1)->textContent
+			)));
+		preg_match_all(
+			'/'.
+				// SALDO: 123,45
+				'SALDO\:.([0-9\,]*).'.
+				'*'.
+				// (Sist oppdatert DD.MM.YYYY kl. HH:MM)
+				'\(Sist.oppdatert.([0-9]{2}).([0-9]{2}).([0-9]{4}).kl..([0-9]{2}).([0-9]{2})\)'.
+			'/', $first_table, $matches);
+		$balance = str_replace(',', '.', $matches[1][0]); // "Saldo"
+		$last_updated = mktime(
+			$matches[5][0], // hour
+			$matches[6][0], // minutes
+			0, // seconds
+			$matches[3][0], // month
+			$matches[2][0], // day
+			$matches[4][0]); // year
+		
+		// :: WE NOW HAVE
+		// $balance
+		// $last_updated		
+		
+		$second_table = $treeContainingData
+				->childNodes->item(2) // The second table
+				->childNodes->item(0); // Go into the <tbody>, foreach know returns <tr>
+		$keys = array();
+		$data = array();
+		foreach($second_table->childNodes as $i => $tr) {
+			if($i == 0) { // Ignore first <tr>
+				continue;
+			}
+			elseif($i == 1) { // Second <tr>, contains table heading
+				//$this->print_tree($tr, '');
+				$j = 0;
+				foreach($tr->childNodes as $td) {
+					if($td->nodeName != '#text') {
+						if($j != 0) {
+							$keys[$j] = 
+								// Strip the key
+								str_replace("\t", '',
+								str_replace("\r", '',
+								str_replace("\n", '',
+								str_replace(" ", '',
+									$td->textContent
+								))));
+						}
+						$j++;
+					}
+				}
+			} else {
+				$data[$i] = array();
+				$j = 0;
+				foreach($tr->childNodes as $td) {
+					if($td->nodeName != '#text') {
+						if($j != 0) {
+							$data[$i][$keys[$j]] = 
+								// Strip the key
+								str_replace("\t", '',
+								str_replace("\r", '',
+								str_replace("\n", '',
+									trim($td->textContent)
+								)));
+						}
+						$j++;
+					}
+				}
+				if(!count($data[$i])) {
+					unset($data[$i]);
+				}
+			}
+		}
+		
+		
+		// :: WE NOW HAVE
+		// $balance
+		// $last_updated
+		// $data
+		
+		$sum = 0;
+		$transactions = array();
+		$period_start = $last_updated;
+		foreach($data as $row)
+		{
+			$row['Inn'] = str_replace(',', '.', $row['Inn']);
+			$row['Ut'] = str_replace(',', '.', $row['Ut']);
+			$amount = $row['Inn']-$row['Ut'];
+			
+			$date = sb1helper::convert_stringDate_to_intUnixtime(utf8::clean($row['Dato']));
+			
+			$transactions[] = array(
+					'bankaccount_id'         => $this->bankaccount_id,
+					'date'                   => $date,
+					'amount'                 => $amount,
+					'kolumbus_transaction'   => trim($row['Transaksjon']),
+					'kolumbus_owner'         => trim($row['Korteier']),
+				);
+			
+			$sum += $amount;
+			if($period_start > $date)
+				$period_start = $date;
+		}
+		
+		if($sum != $balance) {
+			throw new Exception ('Sum of the transactions found is not the same as balance for the account');
+		}
+		
+		$this->create_transactions($transactions, true, $period_start, $last_updated);
+		
+		echo '<b>'.__('From').':</b> '.date('d-m-Y', $this->from).'</li><li>';
+		echo '<b>'.__('To').':</b> '.date('d-m-Y', $this->to).'</li><li>';
+		echo 
+			__('Imported').': '.$this->transactions_new.', '.
+			__('Already in database').': '.$this->transactions_already_imported.', '.
+			__('No interest date (not imported)').': '.$this->transactions_not_imported;
+
+		
+		$this->last_imported = time();
+		if($this->loaded())
+			$this->update();
+		else
+			$this->create();
+	}
 }
