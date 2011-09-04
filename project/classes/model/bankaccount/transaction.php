@@ -181,6 +181,11 @@ class Model_Bankaccount_Transaction extends hasinfo {
 			$description = $info['srbank_description'];
 		} elseif(isset($info['csv_description'])) { // Generic description
 			$description = $info['csv_description'];
+		} elseif(isset($info['kolumbus_transaction']) && 
+			isset($info['kolumbus_owner']) && $info['kolumbus_owner'] != '') {
+			$description = $info['kolumbus_owner'].': '.$info['kolumbus_transaction'];
+		} elseif(isset($info['kolumbus_transaction'])) {
+			$description = $info['kolumbus_transaction'];
 		}
 		else {
 			$description = '';
