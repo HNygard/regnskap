@@ -48,6 +48,19 @@ class Controller_Import extends Controller_Template
 		$this->importfiles('generic_csv', $this->generic_csv_main_folder);
 	}
 	
+	function importfiles_readfolder ($bankaccount_id, $folder)
+	{
+		$handle = opendir($folder);
+		while (false !== ($file = readdir($handle)))
+		{
+			if($file != '..' && $file != '.')
+			{
+				echo '<li>'.$folder.$file.'</li>';
+				$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
+			}
+		}
+	}
+	
 	function importfiles ($import_type, $mainfolder)
 	{
 		//$Q = DB::query(Database::SELECT, "select * from `bankkontoer`")->execute();
@@ -68,28 +81,24 @@ class Controller_Import extends Controller_Template
 				)
 			);
 		*/
-		$files_found = array();
+		$this->importfiles_files_found = array();
 		foreach($bankaccounts as $bankaccount)
 		{
 			$folder = $mainfolder.'/'.$bankaccount->num.'/';
-			$files_found[$bankaccount->id] = array();
+			$this->importfiles_files_found[$bankaccount->id] = array();
 			echo '<li><b>'.$bankaccount->num.'</b><ul>';
 		
-			// Getting files from the folder:
-			if (file_exists($folder) && $handle = opendir($folder))
+			// :? Check if folder exists and is a direcotry
+			if (file_exists($folder) && is_dir($folder))
 			{
-				while (false !== ($file = readdir($handle)))
-				{
-					if($file != '..' && $file != '.')
-					{
-						echo '<li>'.$folder.$file.'</li>';
-						$files_found[$bankaccount->id][] = $folder.$file;
-					}
-				}
+				// -> Folder exist and is a directory
+				
+				// Read files in folder
+				$this->importfiles_readfolder($bankaccount->id, $folder);
 			}
 			else
 			{
-				// Folder not found
+				// -> Folder not found or is not a directory
 				echo '<span style="color: red;">'.__('No folder for bank account :bankaccount_num (:folder) exists',
 					array(':bankaccount_num' => $bankaccount->num, ':folder' => $folder)).'.</span>';
 			}
@@ -98,7 +107,7 @@ class Controller_Import extends Controller_Template
 		echo '</ul>';
 	
 		echo '<ul>';
-		foreach($files_found as $bankaccount_id => $files)
+		foreach($this->importfiles_files_found as $bankaccount_id => $files)
 		{
 			foreach($files as $file)
 			{
