@@ -9,7 +9,7 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->bankaccounts = Sprig::factory('bankaccount', array())->load($query, FALSE);
 	}
 	
-	public function action_transactions ($bankaccount_id, $order_by = 'date', $order_desc = 'desc')
+	public function action_transactions ($bankaccount_id, $order_by = 'date', $order_desc = 'asc')
 	{
 		if(
 			$order_by != 'date' && 
