@@ -21,6 +21,7 @@ class Controller_Import extends Controller_Template
 	
 	protected $importfiles_recursive = false;
 	protected $importfiles_search_string;
+	protected $importfiles_without_bankaccount_id = false;
 	
 	function action_index ()
 	{
@@ -73,7 +74,7 @@ class Controller_Import extends Controller_Template
 		
 		while (false !== ($file = readdir($handle)))
 		{
-			if($file == '..' || $file == '.') {
+			if($file == '..' || $file == '.' || $file == '.gitignore') {
 				continue;
 			}
 			
@@ -103,12 +104,18 @@ class Controller_Import extends Controller_Template
 					{
 						// -> String found in file
 						echo '<li>'.$folder.$file.'</li>';
-						$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
+						if($this->importfiles_without_bankaccount_id)
+							$this->importfiles_files_found[] = $folder.$file;
+						else
+							$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
 					}
 				}
 				else {
 					echo '<li>'.$folder.$file.'</li>';
-					$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
+					if($this->importfiles_without_bankaccount_id)
+						$this->importfiles_files_found[] = $folder.$file;
+					else
+						$this->importfiles_files_found[$bankaccount_id][] = $folder.$file;
 				}
 			}
 		}
@@ -217,21 +224,16 @@ class Controller_Import extends Controller_Template
 				'filepath',
 			);
 		*/
-		$files_found = array();
+		$this->importfiles_files_found = array();
 		$folder = $this->srbank_pdf_main_folder.'/';
 		echo '<li><b>'.__('Files found').':</b><ul>';
 	
 		// Getting files from the folder:
 		if (file_exists($folder) && $handle = opendir($folder))
 		{
-			while (false !== ($file = readdir($handle)))
-			{
-				if($file != '..' && $file != '.')
-				{
-					echo '<li>'.$folder.$file.'</li>';
-					$files_found[] = $folder.$file;
-				}
-			}
+			$this->importfiles_without_bankaccount_id = true;
+			$this->importfiles_recursive = true;
+			$this->importfiles_readfolder(0, $folder);
 		}
 		else
 		{
@@ -243,11 +245,8 @@ class Controller_Import extends Controller_Template
 		echo '</ul>';
 	
 		echo '<ul>';
-		foreach($files_found as $file)
+		foreach($this->importfiles_files_found as $file)
 		{
-			if($file == '../import/sr-bank_pdf/.gitignore')
-				continue;
-			
 			echo '<li><b>'.$file.'</b> ';
 			$importfile = Sprig::factory('bankaccount_importfile', 
 				array(
