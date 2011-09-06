@@ -239,7 +239,7 @@ class Model_Bankaccount_Transaction extends hasinfo {
 	public function getInfoForDisplay () {
 		$info = $this->getInfo();
 		unset($info['srbank_pdf_description']);
-		unset($info['srbank_pdf_intrest_date']);
+		unset($info['srbank_pdf_interest_date']);
 		unset($info['srbank_pdf_payment_date']);
 		unset($info['srbank_pdf_type']);
 		unset($info['srbank_csv_payment_date']);
