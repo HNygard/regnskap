@@ -5,7 +5,7 @@ class Controller_Bankaccount extends Controller_Template
 	public function action_index ()
 	{
 		$this->template2->title = __('Bank accounts');
-		$query = DB::select()->order_by('num');
+		$query = DB::select()->order_by('name');
 		$this->template->bankaccounts = Sprig::factory('bankaccount', array())->load($query, FALSE);
 	}
 	

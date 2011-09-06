@@ -9,6 +9,8 @@ class Model_Bankaccount extends Sprig {
 			)),
 			'num' => new Sprig_Field_Char(array(
 			)),
+			'name' => new Sprig_Field_Char(array(
+			)),
 			'type' => new Sprig_Field_Char(array(
 			)),
 		);

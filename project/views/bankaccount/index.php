@@ -4,7 +4,8 @@ echo '<table class="prettytable">';
 foreach($bankaccounts as $bankaccount)
 {
 	echo '	<tr>'.
-			'<th>'.$bankaccount->num.'</th>'.
+			'<th style="text-align: left;">'.$bankaccount->name.'</th>'.
+			'<td>'.$bankaccount->num.'</td>'.
 			'<td>'.$bankaccount->type.'</td>'.
 			'<td>'.
 			html::anchor(
