@@ -44,11 +44,17 @@ function getNextMonth($month)
 echo '<table>'.chr(10);
 echo '	<tr>'.chr(10);
 echo '		<th>&nbsp;</th>'.chr(10);
+$i = 0;
 for($month = $month_last; $month >= $month_first; $month = getNextMonth($month))
 {
+	$i ++;
 	echo '		<th>'.HTML::anchor('index.php/transaction/showbydate/'.
 					substr($month,0,4).'/'.substr($month,4,2)
 			, substr($month, 4).'.'.substr($month, 0, 4)).'</th>'.chr(10);
+	if($i == 12) {
+		$i = 0;
+		echo '		<th>&nbsp;</th>'.chr(10);
+	}
 }
 echo '	</tr>'.chr(10).chr(10);
 
@@ -65,6 +71,7 @@ foreach($query as $account)
 {
 	echo '	<tr>'.chr(10);
 	echo '		<th>'.str_replace(' ', '&nbsp;', $account['name']).'</th>'.chr(10);
+	$i = 0; $average = 0;
 	for($month = $month_last; $month >= $month_first; $month = getNextMonth($month))
 	{
 		if(isset($by_month[$account['id']][$month]))
@@ -72,10 +79,18 @@ foreach($query as $account)
 		else
 			$this_month = 0;
 		
+		$i++; $average += $this_month;
+		
 		echo '		<td align="right">'.HTML::anchor('index.php/transaction/showaccountbydate/'.
 					$account['id'].'/'.
 					substr($month,0,4).'/'.substr($month,4,2)
 			, str_replace(' ', '&nbsp;', HTML::money($this_month))).'</td>'.chr(10);
+		
+		if($i == 12) {
+			echo '		<td align="right">'.HTML::money($average/12).'</td>'.chr(10);
+			$i = 0; $average = 0;
+		}
+		
 		if(!isset($months[$month]))
 			$months[$month] = 0;
 		$months[$month] += $this_month;
@@ -86,6 +101,7 @@ foreach($query as $account)
 // Not imported
 echo '	<tr>'.chr(10);
 echo '		<th>'.__('Not imported').'</th>'.chr(10);
+$i = 0; $average = 0;
 foreach($months as $month => $this_month)
 {
 	// $motnhs[$month] += $this_month;
@@ -96,12 +112,20 @@ foreach($months as $month => $this_month)
 	$result = $query->execute();
 	foreach($result as $this_month)
 	{
+		$i++; $average += $this_month['SUM'];
+		
 		echo '		<td align="right">'.
 				HTML::anchor('index.php/bankaccount/transactionsnotimported_bymonth/'.substr($month,0,4).'/'.substr($month,4,2),
 					str_replace(' ', '&nbsp;', 
 					HTML::money($this_month['SUM']))
 				).
 				'</td>'.chr(10);
+		
+		if($i == 12) {
+			echo '		<td align="right">'.HTML::money($average/12).'</td>'.chr(10);
+			$i = 0; $average = 0;
+		}
+		
 		$months[$month] += $this_month['SUM'];
 	}
 }
