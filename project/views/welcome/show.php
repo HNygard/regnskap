@@ -2,6 +2,9 @@
 
 
 // $transactions_query
+if(!count($transactions_query)) {
+	echo 'No transactions.';
+}
 
 $by_month     = array();
 $month_first  = null;
@@ -41,11 +44,11 @@ function getNextMonth($month)
 }
 
 // Printing months
-echo '<table>'.chr(10);
+echo '<table'.((!count($transactions_query))?' style="display: none;"':'').'>'.chr(10);
 echo '	<tr>'.chr(10);
 echo '		<th>&nbsp;</th>'.chr(10);
 $i = 0;
-for($month = $month_last; $month >= $month_first; $month = getNextMonth($month))
+for($month = $month_last; !is_null($month) && $month >= $month_first; $month = getNextMonth($month))
 {
 	$i ++;
 	echo '		<th>'.HTML::anchor('index.php/transaction/showbydate/'.
@@ -72,7 +75,7 @@ foreach($query as $account)
 	echo '	<tr>'.chr(10);
 	echo '		<th>'.str_replace(' ', '&nbsp;', $account['name']).'</th>'.chr(10);
 	$i = 0; $average = 0;
-	for($month = $month_last; $month >= $month_first; $month = getNextMonth($month))
+	for($month = $month_last; !is_null($month) && $month >= $month_first; $month = getNextMonth($month))
 	{
 		if(isset($by_month[$account['id']][$month]))
 			$this_month = $by_month[$account['id']][$month];
