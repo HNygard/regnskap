@@ -186,8 +186,20 @@
 			var objImagePreloader = new Image();
 			objImagePreloader.onload = function() {
 				$('#lightbox-image').attr('src',settings.imageArray[settings.activeImage][0]);
+				
+				// Check width of image against page size
+				var theWidth  = objImagePreloader.width;
+				var theHeight = objImagePreloader.height;
+				var arrPageSizes = ___getPageSize();
+				if(theWidth > (arrPageSizes[0]-(settings.containerBorderSize *2))) {
+					theHeight = theHeight * ((arrPageSizes[0]-(settings.containerBorderSize *2))/theWidth);
+					theWidth = (arrPageSizes[0]-(settings.containerBorderSize *2));
+				}
+				objImagePreloader.width  = theWidth;
+				objImagePreloader.height = theHeight;
+				
 				// Perfomance an effect in the image container resizing it
-				_resize_container_image_box(objImagePreloader.width,objImagePreloader.height);
+				_resize_container_image_box(theWidth,theHeight);
 				//	clear onLoad, IE behaves irratically with animated gifs otherwise
 				objImagePreloader.onload=function(){};
 			};
@@ -220,6 +232,7 @@
 			} 
 			$('#lightbox-container-image-data-box').css({ width: intImageWidth });
 			$('#lightbox-nav-btnPrev,#lightbox-nav-btnNext').css({ height: intImageHeight + (settings.containerBorderSize * 2) });
+			$('#lightbox-image').css({ width: intImageWidth, height: intImageHeight });
 		};
 		/**
 		 * Show the prepared image
