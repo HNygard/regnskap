@@ -34,7 +34,7 @@
 			imageBlank:				'images/lightbox-blank.gif',			// (string) Path and the name of a blank image (one pixel)
 			// Configuration related to container image box
 			containerBorderSize:	10,			// (integer) If you adjust the padding in the CSS for the container, #lightbox-container-image-box, you will need to update this value
-			containerResizeSpeed:	400,		// (integer) Specify the resize duration of container image. These number are miliseconds. 400 is default.
+			containerResizeSpeed:	10,		// (integer) Specify the resize duration of container image. These number are miliseconds. 400 is default.
 			// Configuration related to texts in caption. For example: Image 2 of 8. You can alter either "Image" and "of" texts.
 			txtImage:				'Image',	// (string) Specify text "Image"
 			txtOf:					'of',		// (string) Specify text "of"
@@ -154,6 +154,7 @@
 			// If window was resized, calculate the new overlay dimensions
 			$(window).resize(function() {
 				// Get page sizes
+
 				var arrPageSizes = ___getPageSize();
 				// Style overlay and show it
 				$('#jquery-overlay').css({
@@ -218,6 +219,14 @@
 			// Get the width and height of the selected image plus the padding
 			var intWidth = (intImageWidth + (settings.containerBorderSize * 2)); // Plus the image´s width and the left and right padding value
 			var intHeight = (intImageHeight + (settings.containerBorderSize * 2)); // Plus the image´s height and the left and right padding value
+			
+			// Check if image is bigger than page
+			//var arrPageSizes = ___getPageSize();
+			//if(intWidth > (arrPageSizes[0]-(settings.containerBorderSize *2))) {
+			//	intHeight = intHeight * ((arrPageSizes[0]-(settings.containerBorderSize *2))/intWidth);
+			//	intWidth = (arrPageSizes[0]-(settings.containerBorderSize *2));
+			//}
+			
 			// Diferences
 			var intDiffW = intCurrentWidth - intWidth;
 			var intDiffH = intCurrentHeight - intHeight;
@@ -240,10 +249,9 @@
 		 */
 		function _show_image() {
 			$('#lightbox-loading').hide();
-			$('#lightbox-image').fadeIn(function() {
-				_show_image_data();
-				_set_navigation();
-			});
+			$('#lightbox-image').show();
+			_show_image_data();
+			_set_navigation();
 			_preload_neighbor_images();
 		};
 		/**
@@ -251,7 +259,7 @@
 		 *
 		 */
 		function _show_image_data() {
-			$('#lightbox-container-image-data-box').slideDown('fast');
+			$('#lightbox-container-image-data-box').show('fast');
 			$('#lightbox-image-details-caption').hide();
 			if ( settings.imageArray[settings.activeImage][1] ) {
 				$('#lightbox-image-details-caption').html(settings.imageArray[settings.activeImage][1]).show();
@@ -396,7 +404,8 @@
 		 */
 		function _finish() {
 			$('#jquery-lightbox').remove();
-			$('#jquery-overlay').fadeOut(function() { $('#jquery-overlay').remove(); });
+			$('#jquery-overlay').hide();
+			$('#jquery-overlay').remove();
 			// Show some elements to avoid conflict with overlay in IE. These elements appear above the overlay.
 			$('embed, object, select').css({ 'visibility' : 'visible' });
 		}
