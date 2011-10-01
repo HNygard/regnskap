@@ -113,7 +113,17 @@ Kohana::modules(array(
  * Set the routes. Each route must have a minimum of a name, a URI and a set of
  * defaults for the URI.
  */
-Route::set('default', '(<controller>(/<action>(/<id>(/<id2>(/<id3>(/<id4>(/<id5>)))))))')
+Route::set('static', 'getfile/transactionfiles/<path>',
+	array(
+		'path'       => '.*', // Cleaned in controller
+		'controller' => 'getfile',
+		'action'     => 'transactionfiles', // (abc|def)
+	))
+	->defaults(array(
+		'controller' => 'getfile',
+		'action' => 'transactionfiles',
+	));
+Route::set('default', '(<controller>(/<action>(/<id>(/<id2>(/<id3>(/<id4>(/<id5>(/<id6>(/<id7>(/<id8>))))))))))')
 	->defaults(array(
 		'controller' => 'welcome',
 		'action'     => 'index',
