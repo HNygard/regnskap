@@ -9,6 +9,7 @@ class Controller_Js extends Kohana_Controller_Template
 		return parent::before();
 	}
 	
+	public function action_transactionfiles () {}
 	public function action_banktransactions () {}
 	public function action_jqueryblockUIjs231() {}
 }

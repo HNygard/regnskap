@@ -18,10 +18,14 @@ class Controller_Import extends Controller_Template
 	protected $srbank_pdf_main_folder = '../import/sr-bank_pdf';
 	protected $generic_csv_main_folder = '../import/generic_csv';
 	protected $kolumbus_main_folder = '../import/kolumbus';
+	static public $transactionfiles_main_folder = '../import/images';
 	
 	protected $importfiles_recursive = false;
 	protected $importfiles_search_string;
 	protected $importfiles_without_bankaccount_id = false;
+	protected $importfiles_readfolder_printlist = true;
+	
+	static protected $importfiles_accountlist;
 	
 	function action_index ()
 	{
@@ -61,6 +65,179 @@ class Controller_Import extends Controller_Template
 		$this->importfiles_recursive = true;
 		$this->importfiles_search_string = $search_string_kolumbus;
 		$this->importfiles ('kolumbus', $this->kolumbus_main_folder);
+	}
+	
+	static function transactionfiles_analyze($file) {
+		// Format: Account - Y-m-d - xyz,ab kr - description
+		// Format: Y-m-d - xyz,ab kr - description
+		
+		if(!isset(self::$importfiles_accountlist)) {
+			// Getting accounts
+			self::$importfiles_accountlist = array();
+			$bankaccounts = Sprig::factory('bankaccount', array())->load(NULL, FALSE);
+			foreach($bankaccounts as $bankaccount)
+			{
+				self::$importfiles_accountlist[$bankaccount->id] = $bankaccount->num;
+			}
+		}
+		
+		$return = array();
+		$delimiter = ' - ';
+		$file = basename($file); // Get just the file name
+		
+		// Getting account, if it exists in database and in filename
+		// Format: Account - Y-m-d - xyz,ab kr - description
+		foreach(self::$importfiles_accountlist as $id => $num) {
+			if(substr($file, 0, strlen($num)) == $num) {
+				// -> Account number is first in the filename
+				$return['account'] = $num;
+				$file = str_replace($num.$delimiter, '', $file); // Remove from filename
+			}
+		}
+		
+		// Getting date, if any
+		// Format: Y-m-d - xyz,ab kr - description
+		$split = explode($delimiter, $file, 3);
+		if(isset($split[0]) && self::isYmd($split[0])) {
+			$return['date'] = self::getYmd($split[0]);
+			$file = str_replace($split[0].$delimiter, '', $file); // Remove from filename
+		}
+		elseif(isset($split[1]) && self::isYmd($split[1])) {
+			$return['account'] = $split[0]; // Unknown account
+			$return['date'] = self::getYmd($split[1]);
+			$file = str_replace($split[1].$delimiter, '', $file); // Remove from filename
+		}
+		
+		// Getting amount, if any
+		// Format: xyz,ab kr - description
+		$split = explode($delimiter, $file, 2);
+		if(isset($split[0]) && self::isKr($split[0])) {
+			$return['amount'] = (self::getKr($split[0]) / 100);
+			$file = str_replace($split[0].$delimiter, '', $file);
+		}
+		
+		
+		// File ending
+		$return['extention']   = pathinfo($file, PATHINFO_EXTENSION);
+		$return['description'] = pathinfo($file, PATHINFO_FILENAME);
+		
+		return $return;
+	}
+	static function isYmd($string) {
+		// Format: YYYY-mm-dd
+		if(strlen($string) != strlen('YYYY-mm-dd')) {
+			return false;
+		}
+		
+		if(
+			is_numeric($string{0}) && // Y
+			is_numeric($string{1}) && // Y
+			is_numeric($string{2}) && // Y
+			is_numeric($string{3}) && // Y
+			'-' ==     $string{4}  && // -
+			is_numeric($string{5}) && // m
+			is_numeric($string{6}) && // m
+			'-' ==     $string{7}  && // -
+			is_numeric($string{8}) && // d
+			is_numeric($string{9})    // d
+		) {
+			return true;
+		}
+		
+		return false;
+	}
+	static function getYmd($date) {
+		// Format: YYYY-mm-dd
+		$parts = explode('-', $date);
+		if(count($parts) == 3)
+		{
+			return mktime (0, 0, 0, $parts[1], $parts[2], $parts[0]);
+		}
+	}
+	static function isKr ($string) {
+		if(strpos($string, ' kr') === FALSE || strpos($string, ',') === FALSE) {
+			return false;
+		}
+		
+		$string = str_replace(' kr', '', $string);
+		$string = str_replace(',', '', $string);
+		
+		if(is_numeric($string)) {
+			return true;
+		}
+		
+		return false;
+	}
+	static function getKr ($string) {
+		if(strpos($string, ' kr') === FALSE || strpos($string, ',') === FALSE) {
+			return 0;
+		}
+		
+		$string = str_replace(' kr', '', $string);
+		$string = str_replace(',', '', $string);
+		
+		if(is_numeric($string)) {
+			// Returns øre
+			return $string;
+		}
+		
+		return 0;
+	}
+	
+	function action_transactionfiles ($action = '')
+	{
+		if($action == 'renamejs') {
+			if(
+				!isset($_POST['folder']) ||
+				!isset($_POST['filenameoriginal']) ||
+				!isset($_POST['filename'])
+			) {
+				echo 'Parameter not found';
+				exit;
+			}
+			
+			// Cleaning
+			// Folders are allowed to have / but not .
+			$folder           = preg_replace("/[^A-Za-z0-9\(\)\_\,\-\/\s]/", "", $_POST['folder']);
+			$filenameoriginal = preg_replace("/[^A-Za-z0-9\(\)\_\,\-\.\s]/", "", $_POST['filenameoriginal']);
+			$filename         = preg_replace("/[^A-Za-z0-9\(\)\_\,\-\.\s]/", "", $_POST['filename']);
+			$filenameoriginal = str_replace('..', '', $filenameoriginal);
+			$filename         = str_replace('..', '', $filename);
+			
+			// Check if it exists
+			$fileoriginal = self::$transactionfiles_main_folder.$folder.'/'.$filenameoriginal;
+			if(!file_exists($fileoriginal)) {
+				echo 'File not found.';
+				echo chr(10).$fileoriginal;
+				exit;
+			}
+			
+			// Rename
+			$newname = self::$transactionfiles_main_folder.$folder.'/'.$filename;
+			$failure = false;
+			try {
+				rename($fileoriginal, $newname);
+			}
+			catch (Exception $e) {
+				$failure = true;
+			}
+			if(!$failure) {
+				echo 'ok';
+				exit;
+			}
+			else {
+				echo 'Rename failed';
+				echo chr(10).$e->getMessage();
+				exit;
+			}
+		}
+		
+		$this->importfiles_recursive = true;
+		$this->importfiles_readfolder_printlist = false;
+		$this->importfiles_readfolder ('transactionfiles', self::$transactionfiles_main_folder);
+		
+		$this->template2->title = __('View and rename files for transations');
+		$this->template->importfiles_files_found = $this->importfiles_files_found;
 	}
 	
 	function importfiles_readfolder ($bankaccount_id, $folder)
@@ -103,7 +280,9 @@ class Controller_Import extends Controller_Template
 					if(strpos(file_get_contents($folder.$file), $this->importfiles_search_string) !== FALSE)
 					{
 						// -> String found in file
-						echo '<li>'.$folder.$file.'</li>';
+						if($this->importfiles_readfolder_printlist) {
+							echo '<li>'.$folder.$file.'</li>';
+						}
 						if($this->importfiles_without_bankaccount_id)
 							$this->importfiles_files_found[] = $folder.$file;
 						else
@@ -111,7 +290,9 @@ class Controller_Import extends Controller_Template
 					}
 				}
 				else {
-					echo '<li>'.$folder.$file.'</li>';
+					if($this->importfiles_readfolder_printlist) {
+						echo '<li>'.$folder.$file.'</li>';
+					}
 					if($this->importfiles_without_bankaccount_id)
 						$this->importfiles_files_found[] = $folder.$file;
 					else

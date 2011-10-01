@@ -11,6 +11,10 @@ if(Request::current()->controller() == 'bankaccount' && Request::current()->acti
 {
 	echo '	<script type="text/javascript" src="'.URL::site('index.php/js/banktransactions', null, false).'"></script>'.chr(10);
 }
+if(Request::current()->controller() == 'import' && Request::current()->action() == 'transactionfiles')
+{
+	echo '	<script type="text/javascript" src="'.URL::site('index.php/js/transactionfiles', null, false).'"></script>'.chr(10);
+}
 ?>
 	<link href="<?php echo URL::site('index.php/css/regnskap', null, false); ?>" rel="stylesheet" type="text/css" />
 </head>
