@@ -25,6 +25,13 @@ foreach($importfiles_files_found as $bankaccount_id => $files)
 		echo '<td><input type="text" name="extention'.$i.'" value="'.   ((isset($analyze['extention']))   ?$analyze['extention']:'').'" size="4"></td>';
 		echo '<td><input type="button" class="savefilename" value="Save" id="savebutton'.$i.'"></td>';
 		
+		echo '<td rowspan="2">'.
+			((isset($analyze['date']) && isset($analyze['amount']))?
+				'Can be imported':
+				'Can not be imported'
+			).
+			'</td>';
+		
 		echo '</tr>';
 		
 		echo '<tr><td colspan="6" class="filename'.$i.'"></td></tr>';
