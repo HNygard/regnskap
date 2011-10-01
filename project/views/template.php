@@ -1,10 +1,8 @@
-<!DOCTYPE html>
 <html>
 <head>
 	<title><?php echo $title; ?> - Regnskap</title>
 	<link type="text/css" rel="stylesheet" media="all" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes/base/jquery-ui.css" />
 	<link type="text/css" rel="stylesheet" media="all" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css" />
-	<link type="text/css" rel="stylesheet" media="screen" href="<?php echo URL::site('/css/jquery.lightbox-0.5.css', null, false); ?>" />
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.js"></script>
 	<script type="text/javascript" src="<?php echo URL::site('index.php/js/jqueryblockUIjs231', null, false); ?>"></script>
@@ -12,9 +10,10 @@
 if(Request::current()->controller() == 'bankaccount' && Request::current()->action())
 {
 	echo '	<script type="text/javascript" src="'.URL::site('index.php/js/banktransactions', null, false).'"></script>'.chr(10);
-}
+} 
 if(Request::current()->controller() == 'import' && Request::current()->action() == 'transactionfiles')
 {
+	echo '	<link type="text/css" rel="stylesheet" media="screen" href="'.URL::site('/css/jquery.lightbox-0.5.css', null, false).'" />'.chr(10);
 	echo '	<script type="text/javascript" src="'.URL::site('index.php/js/transactionfiles', null, false).'"></script>'.chr(10);
 	echo '	<script type="text/javascript" src="'.URL::site('/js/jquery.lightbox-0.5.js', null, false).'"></script>'.chr(10);
 }
