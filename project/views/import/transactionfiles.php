@@ -13,8 +13,10 @@ foreach($importfiles_files_found as $bankaccount_id => $files)
 	{
 		echo '<form>';
 		
+		$directory = str_replace(Controller_Import::$transactionfiles_main_folder, '', dirname($file));
+		
 		echo '<tr class="main_file" id="file_'.$i.'">';
-		echo '<td rowspan="2" class="folder'.$i.'">'.str_replace(Controller_Import::$transactionfiles_main_folder, '', dirname($file)).'</td>';
+		echo '<td rowspan="2" class="folder'.$i.'">'.$directory.'</td>';
 		echo '<th style="text-align: left;" rowspan="2" class="filenameoriginal'.$i.'">'.pathinfo($file, PATHINFO_BASENAME).'</th>';
 		
 		$analyze = Controller_Import::transactionfiles_analyze($file);
@@ -29,6 +31,28 @@ foreach($importfiles_files_found as $bankaccount_id => $files)
 			((isset($analyze['date']) && isset($analyze['amount']))?
 				'Can be imported':
 				'Can not be imported'
+			).
+			'</td>';
+		
+		$directory = (substr($directory, 0, 1) == '/')?substr($directory,1):$directory;
+		echo '<td rowspan="2">'.
+			(
+				(isset($analyze['extention']) &&
+				(
+					strtolower($analyze['extention']) ==  'gif' ||
+					strtolower($analyze['extention']) == 'jpeg' ||
+					strtolower($analyze['extention']) ==  'jpg' ||
+					strtolower($analyze['extention']) ==  'png'
+				)
+			)?
+				'<a href="/regnskap/regnskap/webroot/index.php/getfile/transactionfiles/'.$directory.'/'.basename($file).'" '.
+					'class="file_image">'.
+					'<img width="200" height="200" '.
+						'src="/regnskap/regnskap/webroot/index.php/getfile/transactionfiles/'.$directory.'/'.basename($file).'">'.
+				'</a>':
+				'<a href="/regnskap/regnskap/webroot/index.php/getfile/transactionfiles/'.$directory.'/'.basename($file).'">'.
+					'View file'.
+				'</a>'
 			).
 			'</td>';
 		

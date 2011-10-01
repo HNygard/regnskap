@@ -90,5 +90,7 @@ $(document).ready(function() {
 		updateFilename(file_id);
 	});
 	
+	$('.file_image').lightBox();
+	
 	$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
 });
