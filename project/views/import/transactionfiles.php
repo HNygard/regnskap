@@ -12,6 +12,7 @@ foreach($importfiles_files_found as $bankaccount_id => $files)
 	foreach($files as $file)
 	{
 		echo '<form>';
+		
 		echo '<tr class="main_file" id="file_'.$i.'">';
 		echo '<td rowspan="2" class="folder'.$i.'">'.str_replace(Controller_Import::$transactionfiles_main_folder, '', dirname($file)).'</td>';
 		echo '<th style="text-align: left;" rowspan="2" class="filenameoriginal'.$i.'">'.pathinfo($file, PATHINFO_BASENAME).'</th>';
@@ -24,18 +25,10 @@ foreach($importfiles_files_found as $bankaccount_id => $files)
 		echo '<td><input type="text" name="extention'.$i.'" value="'.   ((isset($analyze['extention']))   ?$analyze['extention']:'').'" size="4"></td>';
 		echo '<td><input type="button" class="savefilename" value="Save" id="savebutton'.$i.'"></td>';
 		
-		unset($analyze['account']);
-		unset($analyze['date']);
-		unset($analyze['amount']);
-		unset($analyze['description']);
-		unset($analyze['extention']);
-		if(count($analyze)) {
-			echo '<td>';
-			print_r($analyze);
-			echo '</td>';
-		}
 		echo '</tr>';
+		
 		echo '<tr><td colspan="6" class="filename'.$i.'"></td></tr>';
+		
 		echo '</form>';
 		$i++;
 		
