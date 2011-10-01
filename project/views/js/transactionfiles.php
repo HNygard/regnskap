@@ -90,7 +90,13 @@ $(document).ready(function() {
 		updateFilename(file_id);
 	});
 	
-	$('.file_image').lightBox();
+	$('.file_image').lightBox({
+			imageLoading:  '/regnskap/regnskap/webroot/images/lightbox-ico-loading.gif',		// (string) Path and the name of the loading icon
+			imageBtnPrev:            '/regnskap/regnskap/webroot/images/lightbox-btn-prev.gif',			// (string) Path and the name of the prev button image
+			imageBtnNext:            '/regnskap/regnskap/webroot/images/lightbox-btn-next.gif',			// (string) Path and the name of the next button image
+			imageBtnClose:           '/regnskap/regnskap/webroot/images/lightbox-btn-close.gif',		// (string) Path and the name of the close btn
+			imageBlank:              '/regnskap/regnskap/webroot/images/lightbox-blank.gif'			// (string) Path and the name of a blank
+		});
 	
 	$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
 });
