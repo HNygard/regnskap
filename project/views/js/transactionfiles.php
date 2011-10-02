@@ -21,6 +21,9 @@ function updateFilename (file_id) {
 		filename += date;
 	}
 	
+	if(amount != '' && amount.indexOf(',') == -1) {
+		amount = amount + ',00';
+	}
 	if(amount != '' && filename != '') {
 		filename += delimiter + amount + ' kr';
 	}
