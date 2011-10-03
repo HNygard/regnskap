@@ -123,6 +123,16 @@ Route::set('static', 'getfile/transactionfiles/<path>',
 		'controller' => 'getfile',
 		'action' => 'transactionfiles',
 	));
+Route::set('browsefolder', 'import/transactionfiles/<action>/<path>',
+	array(
+		'path'       => '.*', // Cleaned in controller
+		'controller' => 'import',
+		'action'     => 'transactionfiles',
+	))
+	->defaults(array(
+		'controller' => 'getfile',
+		'action' => 'transactionfiles',
+	));
 Route::set('default', '(<controller>(/<action>(/<id>(/<id2>(/<id3>(/<id4>(/<id5>(/<id6>(/<id7>(/<id8>))))))))))')
 	->defaults(array(
 		'controller' => 'welcome',

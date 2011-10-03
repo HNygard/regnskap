@@ -24,6 +24,7 @@ class Controller_Import extends Controller_Template
 	protected $importfiles_search_string;
 	protected $importfiles_without_bankaccount_id = false;
 	protected $importfiles_readfolder_printlist = true;
+	protected $importfiles_readfolder_incdirectories = true;
 	
 	static protected $importfiles_accountlist;
 	
@@ -184,7 +185,7 @@ class Controller_Import extends Controller_Template
 		return 0;
 	}
 	
-	function action_transactionfiles ($action = '')
+	function action_transactionfiles ($action = '', $path = '')
 	{
 		if($action == 'renamejs') {
 			if(
@@ -232,12 +233,28 @@ class Controller_Import extends Controller_Template
 			}
 		}
 		
-		$this->importfiles_recursive = true;
+		if($action != '') {
+			if($path != '') {
+				$action .= '/'.$path;
+			}
+			$path = preg_replace("/[^A-Za-z0-9\(\)\_\,\-\/\.\s]/", '', $action);
+			$folder = self::$transactionfiles_main_folder.'/'.str_replace('..', '', $path);
+		}
+		else {
+			$folder = self::$transactionfiles_main_folder;
+		}
+		
+		$this->importfiles_recursive = false;
 		$this->importfiles_readfolder_printlist = false;
-		$this->importfiles_readfolder ('transactionfiles', self::$transactionfiles_main_folder);
+		$this->importfiles_readfolder_incdirectories = true;
+		$this->importfiles_files_found = array();
+		$this->importfiles_folders_found = array();
+		$this->importfiles_readfolder ('transactionfiles', $folder);
 		
 		$this->template2->title = __('View and rename files for transations');
-		$this->template->importfiles_files_found = $this->importfiles_files_found;
+		$this->template->importfiles_files_found   = $this->importfiles_files_found;
+		$this->template->importfiles_folders_found = $this->importfiles_folders_found;
+		$this->template->folder = $folder;
 	}
 	
 	function importfiles_readfolder ($bankaccount_id, $folder)
@@ -245,6 +262,10 @@ class Controller_Import extends Controller_Template
 		// Make sure $folder ends with /
 		if(substr($folder, -1, 1) != '/') {
 			$folder .= '/';
+		}
+		
+		if(!is_dir($folder)) {
+			return;
 		}
 		
 		$handle = opendir($folder);
@@ -258,6 +279,10 @@ class Controller_Import extends Controller_Template
 			// :? $fils is directory?
 			if(is_dir($folder.$file)) {
 				// -> $file is directory
+				
+				if($this->importfiles_readfolder_incdirectories) {
+					$this->importfiles_folders_found[] = $folder.$file;
+				}
 				
 				// :? Going through subdirectories of $folder?
 				if($this->importfiles_recursive) {

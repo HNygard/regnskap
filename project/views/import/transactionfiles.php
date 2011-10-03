@@ -1,9 +1,13 @@
 <?php
 
-echo '<script>
-
-
-</script>';
+if(count($importfiles_folders_found)) {
+	echo '<ul>';
+	foreach($importfiles_folders_found as $folder) {
+		$folder = str_replace(Controller_Import::$transactionfiles_main_folder.'/', '', $folder);
+		echo '<li>'.html::anchor('index.php/import/transactionfiles/'.$folder, $folder).'</li>';
+	}
+	echo '</ul>';
+}
 
 echo '<table>';
 $i = 0;
