@@ -21,7 +21,7 @@ class Controller_Getfile extends Kohana_Controller_Template
 			$this->response->body(file_get_contents($path));
 
 			// Set the proper headers to allow caching
-			$this->response->headers('content-type',  File::mime_by_ext(pathinfo($path, PATHINFO_EXTENSION)));
+			$this->response->headers('content-type',  File::mime_by_ext(pathinfo(strtolower($path), PATHINFO_EXTENSION)));
 			$this->response->headers('last-modified', date('r', filemtime($path)));
 		}
 		else {
