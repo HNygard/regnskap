@@ -37,6 +37,7 @@ __('Administration').': '.chr(10).
 html::anchor('index.php/account', __('Accounts')).' -:- '.chr(10).
 html::anchor('index.php/transaction', __('Transactions')).' -:- '.chr(10).
 html::anchor('index.php/bankaccount_autoimport', __('Autoimports')).' -:- '.chr(10).
+html::anchor('index.php/Import_SB1pdftocsv', __('Convert Sparebank 1 PDF to CSV')).' -:- '.chr(10).
 
 '</span>'.chr(10).chr(10);
 
