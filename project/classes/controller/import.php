@@ -51,6 +51,7 @@ class Controller_Import extends Controller_Template
 	
 	function action_srbank ()
 	{
+		$this->importfiles_recursive = true;
 		$this->importfiles('srbank_csv', $this->srbank_main_folder);
 	}
 	
