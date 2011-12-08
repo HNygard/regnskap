@@ -360,6 +360,7 @@ class Model_Bankaccount_Importfile extends Sprig {
 					case 'NETTBANK':
 					case 'OVERFØRSEL UTLAND':
 					case 'OPPRETTING':
+					case 'TRAPPERENTE':
 						break;
 					
 					case 'Fra':
