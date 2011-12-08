@@ -5,7 +5,7 @@ class Controller_Account extends Controller_Template_Crud
 	public function action_index ()
 	{
 		$this->template2->title = __('Accounts');
-		$query = DB::select()->order_by('num');
+		$query = DB::select()->order_by('num')->order_by('name');
 		$this->template->accounts = Sprig::factory('account', array())->load($query, FALSE);
 	}
 	
