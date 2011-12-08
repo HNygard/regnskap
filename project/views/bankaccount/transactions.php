@@ -24,6 +24,7 @@ $accounts = Sprig::factory('account', array())->load($query, FALSE);
 
 $query = DB::select()->order_by('num');
 $bankaccounts = Sprig::factory('bankaccount', array())->load($query, FALSE);
+$bankaccount_names = array();
 
 echo '<div id="dialog-form" title="'.__('Create autoimport').'">
 	<span id="last_transaction_id" style="display: none;"></span>
@@ -41,9 +42,10 @@ echo '		</select>
 		
 		<input type="checkbox" name="autoimport_bankaccount_checkbox" id="autoimport_bankaccount_id" value="1" class="text ui-widget-content ui-corner-all">
 		<select name="autoimport_bankaccount_id" id="autoimport_bankaccount_txt" class="text ui-widget-content ui-corner-all">'.chr(10);
-foreach($bankaccounts as $bankaccount_tmp)
-	echo '			<option value="'.$bankaccount_tmp->id.'">'.$bankaccount_tmp->num.' ('.$bankaccount_tmp->type.')</option>'.chr(10);
-
+foreach($bankaccounts as $bankaccount_tmp) {
+	echo '			<option value="'.$bankaccount_tmp->id.'">'.$bankaccount_tmp->num.' ('.$bankaccount_tmp->type.') - '.$bankaccount_tmp->name.'</option>'.chr(10);
+	$bankaccount_names[$bankaccount_tmp->id] = $bankaccount_tmp->num .' - '. $bankaccount_tmp->name;
+}
 echo '		</select>
 		<label for="autoimport_bankaccount_checkbox">'.__('Only from this bankaccount?').'</label><br />
 		
@@ -134,6 +136,10 @@ foreach($bankaccount_transactions as $bankaccount_transaction)
 		$tmp[] = $key.'=<span class="value key_'.$key.'">'.$value.'</span>';
 	}
 	echo implode($tmp, '<br />');
+
+	// Print bank account name
+	echo '<br /><b>'.$bankaccount_names[$bankaccount_transaction->bankaccount_id].'</b>';
+	
 	echo '</td>'.chr(10).
 		'		<td class="button">';
 	echo __('Unknown');
