@@ -72,6 +72,7 @@ echo '	</tr>'.chr(10).chr(10);
 
 $accounts = DB::select()->from('accounts');
 $accounts->where('id','!=','-1');
+$accounts->order_by('name');
 foreach($by_month as $account_id => $account_months)
 {
 	$accounts->or_where('id', '=', $account_id);
