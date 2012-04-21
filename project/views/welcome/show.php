@@ -7,6 +7,7 @@ if(!count($transactions_query)) {
 }
 
 $by_month     = array();
+$sum_by_account = array();
 $month_first  = null;
 $month_last   = null;
 foreach($transactions_query as $transaction)
@@ -25,6 +26,12 @@ foreach($transactions_query as $transaction)
 		$by_month[$transaction['account_id']][$month] = 0;
 	
 	$by_month[$transaction['account_id']][$month] += $transaction['amount'];
+
+	if(!isset($sum_by_account[$transaction['account_id']])) {
+		$sum_by_account[$transaction['account_id']] = 0;
+	}
+	
+	$sum_by_account[$transaction['account_id']] += $transaction['amount'];
 }
 
 function getNextMonth($month)
@@ -47,6 +54,7 @@ function getNextMonth($month)
 echo '<table'.((!count($transactions_query))?' style="display: none;"':'').'>'.chr(10);
 echo '	<tr>'.chr(10);
 echo '		<th>&nbsp;</th>'.chr(10);
+echo '		<th>&nbsp;</th>'.chr(10);
 $i = 0;
 for($month = $month_last; !is_null($month) && $month >= $month_first; $month = getNextMonth($month))
 {
@@ -56,7 +64,8 @@ for($month = $month_last; !is_null($month) && $month >= $month_first; $month = g
 			, substr($month, 4).'.'.substr($month, 0, 4)).'</th>'.chr(10);
 	if($i == 12) {
 		$i = 0;
-		echo '		<th>&nbsp;</th>'.chr(10);
+		echo '		<th>Sum</th>'.chr(10);
+		echo '		<th>Average</th>'.chr(10);
 	}
 }
 echo '	</tr>'.chr(10).chr(10);
@@ -74,7 +83,8 @@ foreach($query as $account)
 {
 	echo '	<tr>'.chr(10);
 	echo '		<th>'.str_replace(' ', '&nbsp;', $account['name']).'</th>'.chr(10);
-	$i = 0; $average = 0;
+	echo '		<td align="right">'.HTML::money((isset($sum_by_account[$account['id']])?$sum_by_account[$account['id']]:0)).'</td>'.chr(10);
+	$i = 0; $sum_12 = 0;
 	for($month = $month_last; !is_null($month) && $month >= $month_first; $month = getNextMonth($month))
 	{
 		if(isset($by_month[$account['id']][$month]))
@@ -82,7 +92,7 @@ foreach($query as $account)
 		else
 			$this_month = 0;
 		
-		$i++; $average += $this_month;
+		$i++; $sum_12 += $this_month;
 		
 		echo '		<td align="right">'.HTML::anchor('index.php/transaction/showaccountbydate/'.
 					$account['id'].'/'.
@@ -90,8 +100,9 @@ foreach($query as $account)
 			, str_replace(' ', '&nbsp;', HTML::money($this_month))).'</td>'.chr(10);
 		
 		if($i == 12) {
-			echo '		<td align="right">'.HTML::money($average/12).'</td>'.chr(10);
-			$i = 0; $average = 0;
+			echo '		<td align="right">'.HTML::money($sum_12).'</td>'.chr(10);
+			echo '		<td align="right">'.HTML::money($sum_12/12).'</td>'.chr(10);
+			$i = 0; $sum_12 = 0;
 		}
 		
 		if(!isset($months[$month]))
@@ -104,7 +115,8 @@ foreach($query as $account)
 // Not imported - positiv
 echo '	<tr>'.chr(10);
 echo '		<th>'.__('Not imported').'</th>'.chr(10);
-$i = 0; $average = 0;
+echo '		<td align="right">&nbsp;</td>'.chr(10);
+$i = 0; $sum_12 = 0;
 foreach($months as $month => $this_month)
 {
 	// $motnhs[$month] += $this_month;
@@ -116,7 +128,7 @@ foreach($months as $month => $this_month)
 	$result = $query->execute();
 	foreach($result as $this_month)
 	{
-		$i++; $average += $this_month['SUM'];
+		$i++; $sum_12 += $this_month['SUM'];
 		
 		echo '		<td align="right">'.
 				HTML::anchor('index.php/bankaccount/transactionsnotimported_bymonth/'.substr($month,0,4).'/'.substr($month,4,2),
@@ -126,8 +138,9 @@ foreach($months as $month => $this_month)
 				'</td>'.chr(10);
 		
 		if($i == 12) {
-			echo '		<td align="right">'.HTML::money($average/12).'</td>'.chr(10);
-			$i = 0; $average = 0;
+			echo '		<td align="right">'.HTML::money($sum_12).'</td>'.chr(10);
+			echo '		<td align="right">'.HTML::money($sum_12/12).'</td>'.chr(10);
+			$i = 0; $sum_12 = 0;
 		}
 		
 		$months[$month] += $this_month['SUM'];
@@ -138,7 +151,8 @@ echo '	</tr>'.chr(10);
 // Not imported
 echo '	<tr>'.chr(10);
 echo '		<th>'.__('Not imported').'</th>'.chr(10);
-$i = 0; $average = 0;
+echo '		<td align="right">&nbsp;</td>'.chr(10);
+$i = 0; $sum_12 = 0;
 foreach($months as $month => $this_month)
 {
 	// $motnhs[$month] += $this_month;
@@ -150,7 +164,7 @@ foreach($months as $month => $this_month)
 	$result = $query->execute();
 	foreach($result as $this_month)
 	{
-		$i++; $average += $this_month['SUM'];
+		$i++; $sum_12 += $this_month['SUM'];
 		
 		echo '		<td align="right">'.
 				HTML::anchor('index.php/bankaccount/transactionsnotimported_bymonth/'.substr($month,0,4).'/'.substr($month,4,2),
@@ -160,8 +174,8 @@ foreach($months as $month => $this_month)
 				'</td>'.chr(10);
 		
 		if($i == 12) {
-			echo '		<td align="right">'.HTML::money($average/12).'</td>'.chr(10);
-			$i = 0; $average = 0;
+			echo '		<td align="right">'.HTML::money($sum_12/12).'</td>'.chr(10);
+			$i = 0; $sum_12 = 0;
 		}
 		
 		$months[$month] += $this_month['SUM'];
@@ -170,11 +184,18 @@ foreach($months as $month => $this_month)
 echo '	</tr>'.chr(10);
 
 // Sum
+$i = 0;
 echo '	<tr>'.chr(10);
 echo '		<th>'.__('Sum').'</th>'.chr(10);
+echo '		<td align="right">&nbsp;</td>'.chr(10);
 foreach($months as $month => $this_month)
 {
+	$i++;
 	echo '		<td align="right">'.str_replace(' ', '&nbsp;', HTML::money($this_month)).'</td>'.chr(10);
+	if($i == 12) {
+		echo '		<td align="right">&nbsp;</td>'.chr(10);
+		$i = 0;
+	}
 }
 echo '	</tr>'.chr(10);
 
