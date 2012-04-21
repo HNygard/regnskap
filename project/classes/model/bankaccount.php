@@ -15,4 +15,13 @@ class Model_Bankaccount extends Sprig {
 			)),
 		);
 	}
+	
+	public function getBalance() {
+		foreach(DB::select(array('SUM("amount")', 'balance'))
+			->from('bankaccount_transactions')
+			->where('bankaccount_id', '=', $this->id)
+			->execute() as $row) {
+			return $row['balance'];
+		}
+	}
 }
