@@ -14,11 +14,11 @@ function csv_to_array($array)
 
 class Controller_Import extends Controller_Template
 {
-	protected $srbank_main_folder = '../import/sr-bank';
-	protected $srbank_pdf_main_folder = '../import/sr-bank_pdf';
-	protected $generic_csv_main_folder = '../import/generic_csv';
-	protected $kolumbus_main_folder = '../import/kolumbus';
-	static public $transactionfiles_main_folder = '../import/images';
+	protected $srbank_main_folder                = '../import/sr-bank';
+	protected $srbank_pdf_main_folder            = '../import/sr-bank_pdf';
+	protected $generic_csv_main_folder           = '../import/generic_csv';
+	protected $kolumbus_main_folder              = '../import/kolumbus';
+	static public $transactionfiles_main_folder  = '../import/images';
 	
 	protected $importfiles_recursive = false;
 	protected $importfiles_search_string;
@@ -423,14 +423,8 @@ class Controller_Import extends Controller_Template
 		exit;
 	}
 	
-	function action_srbank_pdf ()
+	function action_srbank_pdf ($go = '')
 	{
-		/*
-		$files_found = array(
-				'filepath',
-				'filepath',
-			);
-		*/
 		$this->importfiles_files_found = array();
 		$folder = $this->srbank_pdf_main_folder.'/';
 		echo '<li><b>'.__('Files found').':</b><ul>';
@@ -454,7 +448,10 @@ class Controller_Import extends Controller_Template
 		echo '<ul>';
 		foreach($this->importfiles_files_found as $file)
 		{
-			echo '<li><b>'.$file.'</b> ';
+			$file2 = substr($file, strlen($folder));
+			echo '<li><b>'. 
+					html::anchor('index.php/import/srbank_pdf/'.md5($file2), $file2).
+				'</b> ';
 			$importfile = Sprig::factory('bankaccount_importfile', 
 				array(
 					'filepath' => $file,
@@ -468,19 +465,19 @@ class Controller_Import extends Controller_Template
 			else
 			{
 				echo __('Not jet imported');
+				try {
+					echo '<table>';
+					$importfile->importFromSRbank_PDFFile(true);
+				} catch (Validate_Exception $e) {
+					echo '</li><li style="color: red;">'.print_r($e, true).'<br /><b>Transactions: </b>';
+				} catch (Exception $e) {
+					echo '</li><li style="color: red;">'.
+						'FILE '.$e->getFile().'<br />'.
+						'LINE '.$e->getLine().'<br />'.
+						$e->getMessage();
+				}
+				echo '</table>';
 			}
-			try {
-echo '<table>';
-				$importfile->importFromSRbank_PDFFile();
-			} catch (Validate_Exception $e) {
-				echo '</li><li style="color: red;">'.print_r($e, true).'<br /><b>Transactions: </b>';
-			} catch (Exception $e) {
-				echo '</li><li style="color: red;">'.
-					'FILE '.$e->getFile().'<br />'.
-					'LINE '.$e->getLine().'<br />'.
-					$e->getMessage();
-			}
-echo '</table>';
 			echo '</li></ul>';
 			echo '</li>';
 		}

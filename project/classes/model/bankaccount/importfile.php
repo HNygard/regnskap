@@ -429,8 +429,26 @@ class Model_Bankaccount_Importfile extends Sprig {
 			$this->create();
 	}
 	
+	function printAccountOverview ($account) {
+		echo '<li>';
+		echo '<b>'.__('Bankaccount').':</b> '.$account['account_num'].', '.
+			__('From').': '.date('d-m-Y', $account['accountstatement_start']).', '.
+			__('To').': '.date('d-m-Y', $account['accountstatement_end']).'</li>';
+		echo 
+			'<li>'.
+				__('Account type').': '.$account['account_type'].', '.
+				__('Statement number').': '.$account['accountstatement_num'].
+			'</li>'.
+			'<li>'.
+				__('Balance in').': '.($account['accountstatement_balance_in']/100).', '.
+				__('Balance out').': '.($account['accountstatement_balance_out']/100).
+			'</li>'.
+			'<li>'.
+				__('Number of transactions').': '.count($account['transactions']).
+			'</li>';
+	}
 	
-	function importFromSRbank_PDFFile ()
+	function importFromSRbank_PDFFile ($create = true)
 	{
 		$statementparser = new sb1parser();
 		$statementparser->importPDF(file_get_contents($this->filepath, FILE_BINARY));
@@ -438,10 +456,8 @@ class Model_Bankaccount_Importfile extends Sprig {
 		foreach($statementparser->getAccounts() as $account)
 		{
 			if($account['account_id'] == -1 && count($account['transactions'])) {
+				$this->printAccountOverview($account);
 				echo '<li>';
-				echo '<b>'.__('Bankaccount').':</b> '.$account['account_num'].', '.
-					__('From').': '.date('d-m-Y', $account['accountstatement_start']).', '.
-					__('To').': '.date('d-m-Y', $account['accountstatement_end']).'</li><li>';
 				if($account['account_id'] == -1) 
 					echo 'Nothing imported, unknown account';
 				else
@@ -471,35 +487,39 @@ class Model_Bankaccount_Importfile extends Sprig {
 						str_replace('¿', 'ø', $transaction_array['srbank_pdf_description']); // encoding fix
 				}
 			}
-			$importfile = Sprig::factory('Bankaccount_Importfile', array(
-					'filepath' => $this->filepath,
-					'bankaccount_id' => $account['account_id'],
-				))->load();
-			$importfile->create_transactions(
-					$account['transactions'],
-					true, 
-					$account['accountstatement_start'], 
-					$account['accountstatement_end']
-				);
+			if($create) {
+				$importfile = Sprig::factory('Bankaccount_Importfile', array(
+						'filepath' => $this->filepath,
+						'bankaccount_id' => $account['account_id'],
+					))->load();
+				$importfile->create_transactions(
+						$account['transactions'],
+						true, 
+						$account['accountstatement_start'], 
+						$account['accountstatement_end']
+					);
+			}
 			
-			echo '<li>';
-			echo '<b>'.__('Bankaccount').':</b> '.$account['account_num'].', '.
-				__('From').': '.date('d-m-Y', $account['accountstatement_start']).', '.
-				__('To').': '.date('d-m-Y', $account['accountstatement_end']).'</li><li>';
-			echo 
-				__('Imported').': '.$importfile->transactions_new.', '.
-				__('Already in database').': '.$importfile->transactions_already_imported.', '.
-				__('No interest date (not imported)').': '.$importfile->transactions_not_imported;
-			echo '</li>';
+			$this->printAccountOverview($account);
+			if($create) {
+				echo '<li>';
+				echo 
+					__('Imported').': '.$importfile->transactions_new.', '.
+					__('Already in database').': '.$importfile->transactions_already_imported.', '.
+					__('No interest date (not imported)').': '.$importfile->transactions_not_imported;
+				echo '</li>';
+			}
 			
-			try {
-				$importfile->last_imported = time();
-				if($importfile->loaded())
-					$importfile->update();
-				else
-					$importfile->create();
-			} catch (Validation_Exception $e) {
-				var_dump($e->array->errors());
+			if($create) {
+				try {
+					$importfile->last_imported = time();
+					if($importfile->loaded())
+						$importfile->update();
+					else
+						$importfile->create();
+				} catch (Validation_Exception $e) {
+					var_dump($e->array->errors());
+				}
 			}
 		}
 	}
