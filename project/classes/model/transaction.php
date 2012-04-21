@@ -24,6 +24,10 @@ class Model_Transaction extends Sprig {
 			'bankaccount_transaction_id' => new Sprig_Field_Integer(array(
 				'editable'        => false,
 			)),
+			'bankaccount_transaction' => new Sprig_Field_BelongsTo(array(
+				'editable'        => false,
+				'model'           => 'Bankaccount_Transaction',
+			)),
 			'imported_automatically' => new Sprig_Field_Boolean(array(
 				'editable'        => false,
 			)),
