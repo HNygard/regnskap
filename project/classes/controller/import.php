@@ -449,6 +449,13 @@ class Controller_Import extends Controller_Template
 		foreach($this->importfiles_files_found as $file)
 		{
 			$file2 = substr($file, strlen($folder));
+			if($go != '' && md5($file2) == $go) {
+				// -> The current file is going to be imported
+				$import_transactions_from_this_file = true;
+			}
+			else {
+				$import_transactions_from_this_file = false;
+			}
 			echo '<li><b>'. 
 					html::anchor('index.php/import/srbank_pdf/'.md5($file2), $file2).
 				'</b> ';
@@ -467,7 +474,10 @@ class Controller_Import extends Controller_Template
 				echo __('Not jet imported');
 				try {
 					echo '<table>';
-					$importfile->importFromSRbank_PDFFile(true);
+					$importfile->importFromSRbank_PDFFile($import_transactions_from_this_file);
+					if(!$import_transactions_from_this_file) {
+						echo '</li><li style="color: green;">Ready to be imported (click on file name)';
+					}
 				} catch (Validate_Exception $e) {
 					echo '</li><li style="color: red;">'.print_r($e, true).'<br /><b>Transactions: </b>';
 				} catch (Exception $e) {
