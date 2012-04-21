@@ -175,6 +175,7 @@ foreach($months as $month => $this_month)
 				'</td>'.chr(10);
 		
 		if($i == 12) {
+			echo '		<td align="right">'.HTML::money($sum_12).'</td>'.chr(10);
 			echo '		<td align="right">'.HTML::money($sum_12/12).'</td>'.chr(10);
 			$i = 0; $sum_12 = 0;
 		}
