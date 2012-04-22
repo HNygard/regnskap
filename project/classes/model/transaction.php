@@ -10,6 +10,10 @@ class Model_Transaction extends Sprig {
 			)),
 			'time' => new Sprig_Field_Timestamp(array(
 			)),
+			'account' => new Sprig_Field_BelongsTo(array(
+				'editable'        => false,
+				'model'           => 'Account',
+			)),
 			'account_id' => new Sprig_Field_Integer(array(
 			)),
 			'amount' => new Sprig_Field_Float(array(

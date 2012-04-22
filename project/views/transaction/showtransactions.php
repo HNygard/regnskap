@@ -16,6 +16,7 @@ $sum = 0;
 echo '<table class="prettytable">';
 foreach($transactions as $transaction)
 {
+	$transaction->account->load();
 	$transaction->bankaccount_transaction->load();
 	$bankaccount_transaction_data = array(); // Make nice output
 	foreach($transaction->bankaccount_transaction->getInfoForDisplay() as $key => $value) {
@@ -23,6 +24,8 @@ foreach($transactions as $transaction)
 	}
 	
 	echo '	<tr>'.
+			'<td>'.$transaction->id.'</td>'.
+			'<td><b>'.$transaction->account->name.'</b></td>'.
 			'<td>'.date('d.m.Y', $transaction->time).'</td>'.
 			'<td style="text-align: right"><b>'.HTML::money($transaction->amount).'</b></td>'.
 			'<td>'.$transaction->description.'</td>'.
