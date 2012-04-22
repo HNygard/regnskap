@@ -446,6 +446,9 @@ class Model_Bankaccount_Importfile extends Sprig {
 			'<li>'.
 				__('Number of transactions').': '.count($account['transactions']).
 			'</li>';
+		echo '<li>'.__('Transactions').': <pre class="toggle" style="display: none;">';
+		var_dump($account['transactions']);
+		echo '</pre></li>';
 	}
 	
 	function importFromSRbank_PDFFile ($create = true)
