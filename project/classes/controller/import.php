@@ -37,13 +37,16 @@ class Controller_Import extends Controller_Template
 	{
 		if(
 			$this->request->action() == 'srbank' || 
-			$this->request->action() == 'srbank_pdf' || 
 			$this->request->action() == 'generic_csv' || 
 			$this->request->action() == 'kolumbus'
 		)
 		{
 			$this->use_template2 = false;
 			$this->template = 'import/index';
+		}
+		if($this->request->action() == 'srbank_pdf') {
+			$this->use_template2 = false;
+			$this->template = 'maintemplate';
 		}
 		
 		return parent::before();
@@ -425,6 +428,8 @@ class Controller_Import extends Controller_Template
 	
 	function action_srbank_pdf ($go = '')
 	{
+		ob_start();
+		
 		$this->importfiles_files_found = array();
 		$folder = $this->srbank_pdf_main_folder.'/';
 		echo '<li><b>'.__('Files found').':</b><ul>';
@@ -492,6 +497,10 @@ class Controller_Import extends Controller_Template
 			echo '</li>';
 		}
 		echo '</ul>';
-		exit;
+		
+		// Template stuff
+		$this->template->title = __('Import');
+		$this->template->content = ob_get_contents();
+		ob_end_clean();
 	}
 }

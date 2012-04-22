@@ -18,7 +18,7 @@ class Controller_Template extends Kohana_Controller_Template {
 		{
 			// Load the template
 			
-			$this->template2 = View::factory('template');
+			$this->template2 = View::factory('maintemplate');
 		}
 		
 		return $thereturn;

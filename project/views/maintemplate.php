@@ -20,6 +20,34 @@ if(Request::current()->controller() == 'import' && Request::current()->action() 
 ?>
 	<link href="<?php echo URL::site('index.php/css/regnskap', null, false); ?>" rel="stylesheet" type="text/css" />
 	<meta charset='utf-8'>
+<script type="text/javascript">
+    $(document).ready(function () {
+            var i = 0;
+            $('.toggle').each(function () {
+                    i++;
+                    $(this).before('<a href="#" onclick="return false;" id="togglebtn' + i + '" class="togglebtn" style="text-decoration: none; color: red;">show!</a>');
+                    $(this).attr('id', 'togglearea' + i);
+
+                    $('#togglebtn' + i).click(function () {
+                        var show = true;
+                        if ($(this).html() == 'hide') {
+                            show = false;
+                        }
+                        var togglearea = $('#togglearea' + $(this).attr('id').substr(9));
+                        if (show) {
+                            $(this).html('hide');
+                            togglearea.slideDown();
+                        } else {
+                            $(this).html('show!');
+                            togglearea.slideUp();
+                        }
+                    });
+                });
+            $('.toggle_expandall').click(function () {
+                $('.togglebtn').click();
+            });
+        });
+</script>
 </head>
 
 <body>
