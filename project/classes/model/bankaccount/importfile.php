@@ -450,7 +450,14 @@ class Model_Bankaccount_Importfile extends Sprig {
 	
 	function importFromSRbank_PDFFile ($create = true)
 	{
+		$all_accounts = array();
+		$bankaccounts = Sprig::factory('bankaccount', array())->load(DB::select(), FALSE);
+		foreach($bankaccounts as $bankaccount_tmp) {
+			$all_accounts[$bankaccount_tmp->num] = $bankaccount_tmp->id;
+		}
+		
 		$statementparser = new sb1parser();
+		$statementparser->setAccountTranslation($all_accounts);
 		$statementparser->importPDF(file_get_contents($this->filepath, FILE_BINARY));
 		
 		foreach($statementparser->getAccounts() as $account)
