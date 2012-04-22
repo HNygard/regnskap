@@ -39,6 +39,10 @@ echo '	<tr>'.
 		'<td>&nbsp;</td>'.
 		'<td>&nbsp;</td>'.
 		'<td style="text-align: right;">'.html::money($sum_balance).'</td>'.
-		'<td>&nbsp;</td>'.
+		'<td>'.
+			html::anchor(
+				'index.php/bankaccount/autoimport/',
+				__('Automaticlly import transactions').' '.__('on all bank accounts')
+			).'</td>'.
 	'</tr>';
 echo '</table>';

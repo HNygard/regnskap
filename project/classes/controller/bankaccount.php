@@ -135,18 +135,24 @@ class Controller_Bankaccount extends Controller_Template
 		$this->template->bankaccount_id = $bankaccount_id;
 	}
 	
-	public function action_autoimport ($bankaccount_id)
+	public function action_autoimport ($bankaccount_id = -1)
 	{
 		set_time_limit(0);
-		$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
-		$this->template2->title = __('Autoimport transactions on bank account').' '.$bankaccount->num;
 		$query = DB::select()
 			->order_by('date', 'DESC')
 			->where('imported', '=', false);
-		$query->where('bankaccount_id', '=', $bankaccount->id);
+		if($bankaccount_id == -1) {
+			echo '<h1>Autoimport all accounts</h1>';
+		}
+		else {
+			$bankaccount = Sprig::factory('bankaccount', array('id' => $bankaccount_id))->loadOrThrowException();
+			$this->template2->title = __('Autoimport transactions on bank account').' '.$bankaccount->num;
+			$query->where('bankaccount_id', '=', $bankaccount->id);
+		
+			echo '<h1>'.$bankaccount->num.'</h1>';
+		}
 		$this->template->bankaccount_transactions = Sprig::factory('bankaccount_transaction', array())->load($query, FALSE);
 		
-		echo '<h1>'.$bankaccount->num.'</h1>';
 		foreach($this->template->bankaccount_transactions as $bankaccount_transaction)
 		{
 			echo $bankaccount_transaction->id.' - ';
